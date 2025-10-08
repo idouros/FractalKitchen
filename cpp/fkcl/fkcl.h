@@ -1,18 +1,12 @@
-﻿// fkcl.h : Include file for standard system include files,
-// or project specific include files.
-
-#pragma once
-
-#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
+﻿#pragma once
 
 #include <iostream>
-#include <CL/cl.h>
+#include <CL/opencl.hpp>
 
-// TODO: Reference additional headers your program requires here.
 
 void listDevices()
 {
-    std::cout << std::endl << "========== PART 1: Reading platforms and devices ==========" << std::endl;
+    std::cout << std::endl << "========== Reading platforms and devices ==========" << std::endl;
 
     cl_uint num_platforms = 0;
     clGetPlatformIDs(0, nullptr, &num_platforms);
@@ -47,4 +41,20 @@ void listDevices()
 
     // clean up
     delete[] platform_ids;
+}
+
+
+cl::Device getDevice(const size_t& platformId, const size_t& deviceId)
+{
+    std::cout << std::endl << "===================================================" << std::endl;
+    std::vector<cl::Platform> platforms;
+    cl::Platform::get(&platforms);
+    cl::Platform platform = platforms[platformId];
+    std::cout << "Using platform: " << platform.getInfo<CL_PLATFORM_NAME>() << "\n";
+
+    std::vector<cl::Device> devices;
+    platform.getDevices(CL_DEVICE_TYPE_GPU | CL_DEVICE_TYPE_CPU, &devices);
+    cl::Device device = devices[deviceId];
+    std::cout << "Using device: " << device.getInfo<CL_DEVICE_NAME>() << "\n";
+    return device;
 }
