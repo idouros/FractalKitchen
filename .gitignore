@@ -39,3 +39,7 @@
 
 # debug information files
 *.dwo
+
+# Visual Studio slop
+cpp/.vs/
+cpp/out/
