@@ -8,16 +8,20 @@ add_executable (fkcl "fkcl.cpp" "fkcl.h")
 target_include_directories(fkcl
     PRIVATE
         $ENV{OPENCL_DIR}/include
+        $ENV{OPENCV_DIR}/../../include
 )
 
 target_link_directories(fkcl
     PRIVATE
         $ENV{OPENCL_DIR}/lib
+        $ENV{OPENCV_DIR}/lib
 )
 
 target_link_libraries(fkcl
     PRIVATE
         OpenCL
+        debug opencv_world4100d
+        optimized opencv_world4100
 )
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
