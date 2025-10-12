@@ -1,6 +1,9 @@
 ﻿#pragma once
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
+
 #include <CL/opencl.hpp>
 
 
@@ -57,4 +60,19 @@ cl::Device getDevice(const size_t& platformId, const size_t& deviceId)
     cl::Device device = devices[deviceId];
     std::cout << "Using device: " << device.getInfo<CL_DEVICE_NAME>() << "\n";
     return device;
+}
+
+
+
+// Utility to read a file into a string
+std::string readFile(const std::string& filename) {
+
+    std::string sourceDir = std::filesystem::path(__FILE__).parent_path().string();
+    std::string fullPath = sourceDir + "\\" + filename;
+
+    std::ifstream file(fullPath);
+    if (!file.is_open()) throw std::runtime_error("Cannot open " + fullPath);
+    std::stringstream ss;
+    ss << file.rdbuf();
+    return ss.str();
 }
