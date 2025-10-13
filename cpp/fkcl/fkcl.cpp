@@ -1,14 +1,11 @@
 ﻿// fkcl.cpp : Defines the entry point for the application.
 //
-
 #include <filesystem>
-
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
-
 #include "fkcl.h"
 
-
+// TODO: kernels in separate file(s) / folder(s)
 const char* kernelSource = R"CLC(
 __kernel void init_image(write_only image2d_t img, float x_start, float y_start, float x_step, float y_step) {
     int col = get_global_id(0);
@@ -34,13 +31,12 @@ __kernel void init_image(write_only image2d_t img, float x_start, float y_start,
     }
     if(c_abs(z) > 2)
     {
-        ret = 255.0f;
+        ret = 1.0f;
     }
 
-    // float4 is required for image writes, only .x is used
+    // float4 is required for image writes
     float4 pixel = (float4)(ret, 0.0f, 0.0f, 0.0f);
     write_imagef(img, (int2)(row, col), pixel);
-
 }
 )CLC";
 
@@ -52,7 +48,6 @@ int main()
     size_t n_cols = 500;
 	size_t platformId = 0;
 	size_t deviceId = 0;
-
     float x_start = -2.5;
     float x_end = 1.5;
     float y_start = -2.0;
@@ -60,7 +55,6 @@ int main()
 
     auto x_step = (x_end - x_start) / (float)n_cols;
     auto y_step = (y_end - y_start) / (float)n_rows;
-
 
 	// Get the device
 	//listDevices();
@@ -72,14 +66,10 @@ int main()
 	cl::ImageFormat format(CL_R, CL_FLOAT);
 	cl::Image2D image(context, CL_MEM_WRITE_ONLY, format, n_cols, n_rows);
 
-    // Build and run the kernel
+    // Build the kernel
     std::string complexSource = readFile("complex.cl");
     std::string fullSource = complexSource + "\n" + kernelSource;
     cl::Program program(context, fullSource);
-
-    
-
-
     cl_int err = program.build({ device }, "-cl-fast-relaxed-math");
     cl_build_status status = program.getBuildInfo<CL_PROGRAM_BUILD_STATUS>(device);
     if (status != CL_BUILD_SUCCESS) {
@@ -91,8 +81,7 @@ int main()
         std::cout << "Build successful!" << std::endl;
     }
 
-
-
+    // Run the kernel
     cl::Kernel kernel(program, "init_image");
     kernel.setArg(0, image);
     kernel.setArg(1, x_start);
@@ -100,7 +89,6 @@ int main()
     kernel.setArg(3, x_step);
     kernel.setArg(4, y_step);
     cl::NDRange global(n_cols, n_rows);
-
     queue.enqueueNDRangeKernel(kernel, cl::NullRange, global);
     queue.finish();
 
@@ -113,13 +101,13 @@ int main()
     err = clEnqueueReadImage(queue(), image(), CL_TRUE, origin, region, 0, 0, hostData.data(), 0, nullptr, nullptr);
 
     // Generate the coloured fractal image
-	cv::Mat fractalImage((int)n_rows, (int)n_cols, CV_8UC3); 
+	cv::Mat fractalImage((int)n_rows, (int)n_cols, CV_32FC3);
     for (size_t j = 0; j < n_cols; j++)
     {
         for (size_t i = 0; i < n_rows; i++)
         {
-            auto val = (unsigned int) hostData[i * n_rows + j];
-            fractalImage.at<cv::Vec3b>(i, j) = { (uchar)val, (uchar)val, (uchar)val };
+            auto val = hostData[i * n_rows + j];
+            fractalImage.at<cv::Vec3f>(i, j) = { val, val, val };
         }
     }
 

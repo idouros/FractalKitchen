@@ -3,9 +3,10 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-
 #include <CL/opencl.hpp>
 
+
+// --- OpenCL device management
 
 void listDevices()
 {
@@ -46,7 +47,6 @@ void listDevices()
     delete[] platform_ids;
 }
 
-
 cl::Device getDevice(const size_t& platformId, const size_t& deviceId)
 {
     std::cout << std::endl << "===================================================" << std::endl;
@@ -62,14 +62,11 @@ cl::Device getDevice(const size_t& platformId, const size_t& deviceId)
     return device;
 }
 
-
-
+// --- Kernel utilities
 // Utility to read a file into a string
 std::string readFile(const std::string& filename) {
-
     std::string sourceDir = std::filesystem::path(__FILE__).parent_path().string();
     std::string fullPath = sourceDir + "\\" + filename;
-
     std::ifstream file(fullPath);
     if (!file.is_open()) throw std::runtime_error("Cannot open " + fullPath);
     std::stringstream ss;
