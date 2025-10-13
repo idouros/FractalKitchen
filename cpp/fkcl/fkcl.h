@@ -63,7 +63,8 @@ cl::Device getDevice(const size_t& platformId, const size_t& deviceId)
 }
 
 // --- Kernel utilities
-// Utility to read a file into a string
+
+// Read a (kernel code) file into a string
 std::string readFile(const std::string& filename) {
     std::string sourceDir = std::filesystem::path(__FILE__).parent_path().string();
     std::string fullPath = sourceDir + "\\" + filename;
@@ -72,4 +73,70 @@ std::string readFile(const std::string& filename) {
     std::stringstream ss;
     ss << file.rdbuf();
     return ss.str();
+}
+
+// Build a kernel program
+cl_int buildKernel(cl::Program& program, cl::Device& device)
+{
+    cl_int err = program.build({ device }, "-cl-fast-relaxed-math");
+    cl_build_status status = program.getBuildInfo<CL_PROGRAM_BUILD_STATUS>(device);
+    if (status != CL_BUILD_SUCCESS) {
+        std::string log = program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device);
+        std::cerr << "Build failed:\n" << log << std::endl;
+    }
+    else {
+        std::cout << "Build successful!" << std::endl;
+    }
+    return err;
+}
+
+// --- Run a kernel
+void runKernel(
+    cl::Program& program, 
+    cl::Image2D& image, 
+    cl::CommandQueue& queue,
+    const float x_start,
+    const float y_start,
+    const float x_step,
+    const float y_step,
+    const size_t n_cols, 
+    const size_t n_rows
+)
+{
+    cl::Kernel kernel(program, "init_image");
+    kernel.setArg(0, image);
+    kernel.setArg(1, x_start);
+    kernel.setArg(2, y_start);
+    kernel.setArg(3, x_step);
+    kernel.setArg(4, y_step);
+    cl::NDRange global(n_cols, n_rows);
+    queue.enqueueNDRangeKernel(kernel, cl::NullRange, global);
+    queue.finish();
+}
+
+// Read back image from the device to the host
+std::vector<float> readBackImageData(const size_t n_cols, const size_t n_rows, cl::CommandQueue& queue, const cl::Image2D& image)
+{
+    std::vector<float> hostData(n_cols * n_rows);
+    size_t origin[3] = { 0, 0, 0 };
+    size_t region[3] = { n_cols, n_rows, 1 };
+    size_t r1 = 0;
+    size_t r2 = 0;
+    cl_int err = clEnqueueReadImage(queue(), image(), CL_TRUE, origin, region, 0, 0, hostData.data(), 0, nullptr, nullptr);
+    return hostData;
+}
+
+// --- Image Generation
+cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std::vector<float>& hostData)
+{
+    cv::Mat fractalImage((int)n_rows, (int)n_cols, CV_32FC3);
+    for (size_t j = 0; j < n_cols; j++)
+    {
+        for (size_t i = 0; i < n_rows; i++)
+        {
+            auto val = hostData[i * n_rows + j];
+            fractalImage.at<cv::Vec3f>(i, j) = { val, val, val };
+        } 
+    }
+    return fractalImage;
 }
