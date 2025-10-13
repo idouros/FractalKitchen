@@ -39,7 +39,8 @@ __kernel void init_image(write_only image2d_t img, float x_start, float y_start,
 
     // float4 is required for image writes, only .x is used
     float4 pixel = (float4)(ret, 0.0f, 0.0f, 0.0f);
-    write_imagef(img, (int2)(col, row), pixel);
+    write_imagef(img, (int2)(row, col), pixel);
+
 }
 )CLC";
 
@@ -49,7 +50,7 @@ int main()
 	// TODO: Make these configurable
     size_t n_rows = 500;
     size_t n_cols = 500;
-	size_t platformId = 1;
+	size_t platformId = 0;
 	size_t deviceId = 0;
 
     float x_start = -2.5;
@@ -94,7 +95,12 @@ int main()
 
     cl::Kernel kernel(program, "init_image");
     kernel.setArg(0, image);
+    kernel.setArg(1, x_start);
+    kernel.setArg(2, y_start);
+    kernel.setArg(3, x_step);
+    kernel.setArg(4, y_step);
     cl::NDRange global(n_cols, n_rows);
+
     queue.enqueueNDRangeKernel(kernel, cl::NullRange, global);
     queue.finish();
 
@@ -113,7 +119,7 @@ int main()
         for (size_t i = 0; i < n_rows; i++)
         {
             auto val = (unsigned int) hostData[i * n_rows + j];
-            fractalImage.at<cv::Vec3b>(i, j) = { 0, (uchar)val, 0 };
+            fractalImage.at<cv::Vec3b>(i, j) = { (uchar)val, (uchar)val, (uchar)val };
         }
     }
 
