@@ -11,14 +11,14 @@
 int main()
 {
 	// TODO: Make these configurable
-    size_t n_rows = 1000;
-    size_t n_cols = n_rows; //TODO: get this right, it's arse over tits
-	size_t platformId = 0;
+    size_t n_cols = 800;
+    size_t n_rows = 600;
+	size_t platformId = 1;
 	size_t deviceId = 0;
-    float x_start = -0.75;
-    float x_end = -0.5;
-    float y_start = -0.75;
-    float y_end = -0.5;
+    float x_start = -2.5;
+    float x_end = 1.5;
+    float y_start = -1.5;
+    float y_end = 1.5;
     bool showDeviceList = false;
 
     sectionInfo("Initializing essential parameters...");
@@ -57,6 +57,4 @@ int main()
     // TODO: Add save option
 	cv::waitKey(0);
 	return 0;
-
-    
 }

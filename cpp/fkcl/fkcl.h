@@ -139,7 +139,7 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
     {
         for (auto i = 0; i < n_rows; i++)
         {
-            auto val = hostData[i * n_rows + j];
+            auto val = hostData[i * n_cols + j];
             fractalImage.at<cv::Vec3f>(i, j) = { val, val, val };
         } 
     }
