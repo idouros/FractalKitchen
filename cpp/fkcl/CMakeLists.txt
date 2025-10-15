@@ -3,7 +3,7 @@
 #
 
 # Add source to this project's executable.
-add_executable (fkcl "fkcl.cpp" "fkcl.h")
+add_executable (fkcl "fkcl.cpp" "fkcl.h" "kernels.h" "kernels.h")
 
 target_include_directories(fkcl
     PRIVATE

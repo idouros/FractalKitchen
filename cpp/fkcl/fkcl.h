@@ -5,13 +5,17 @@
 #include <sstream>
 #include <CL/opencl.hpp>
 
+// --- Miscellaneous helpers
+
+void sectionInfo(const std::string& s)
+{
+    std::cout << "===================================================" << std::endl << s << std::endl;
+}
 
 // --- OpenCL device management
 
 void listDevices()
 {
-    std::cout << std::endl << "========== Reading platforms and devices ==========" << std::endl;
-
     cl_uint num_platforms = 0;
     clGetPlatformIDs(0, nullptr, &num_platforms);
     cl_platform_id* platform_ids = new cl_platform_id[num_platforms];
@@ -49,7 +53,6 @@ void listDevices()
 
 cl::Device getDevice(const size_t& platformId, const size_t& deviceId)
 {
-    std::cout << std::endl << "===================================================" << std::endl;
     std::vector<cl::Platform> platforms;
     cl::Platform::get(&platforms);
     cl::Platform platform = platforms[platformId];
@@ -103,6 +106,7 @@ void runKernel(
     const size_t n_rows
 )
 {
+    // TODO: Add timing information
     cl::Kernel kernel(program, "init_image");
     kernel.setArg(0, image);
     kernel.setArg(1, x_start);
@@ -129,10 +133,11 @@ std::vector<float> readBackImageData(const size_t n_cols, const size_t n_rows, c
 // --- Image Generation
 cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std::vector<float>& hostData)
 {
+    // TODO: Make it more colorful...
     cv::Mat fractalImage((int)n_rows, (int)n_cols, CV_32FC3);
-    for (size_t j = 0; j < n_cols; j++)
+    for (auto j = 0; j < n_cols; j++)
     {
-        for (size_t i = 0; i < n_rows; i++)
+        for (auto i = 0; i < n_rows; i++)
         {
             auto val = hostData[i * n_rows + j];
             fractalImage.at<cv::Vec3f>(i, j) = { val, val, val };
