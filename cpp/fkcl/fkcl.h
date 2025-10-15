@@ -100,8 +100,7 @@ void runKernel(
     cl::CommandQueue& queue,
     const float x_start,
     const float y_start,
-    const float x_step,
-    const float y_step,
+    const float pixel_step,
     const size_t n_cols, 
     const size_t n_rows
 )
@@ -111,8 +110,7 @@ void runKernel(
     kernel.setArg(0, image);
     kernel.setArg(1, x_start);
     kernel.setArg(2, y_start);
-    kernel.setArg(3, x_step);
-    kernel.setArg(4, y_step);
+    kernel.setArg(3, pixel_step);
     cl::NDRange global(n_cols, n_rows);
     queue.enqueueNDRangeKernel(kernel, cl::NullRange, global);
     queue.finish();

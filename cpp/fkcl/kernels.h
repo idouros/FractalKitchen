@@ -1,10 +1,10 @@
 const char* kernelMandelbrot = R"CLC(
-__kernel void init_image(write_only image2d_t img, float x_start, float y_start, float x_step, float y_step) {
+__kernel void init_image(write_only image2d_t img, float x_start, float y_start, float pixel_step) {
     int col = get_global_id(0);
     int row = get_global_id(1);
 
-    float y = y_start + (float)row * y_step;
-    float x = x_start + (float)col * x_step;
+    float y = y_start + (float)row * pixel_step;
+    float x = x_start + (float)col * pixel_step;
 
     float ret = 0.0f;
     unsigned int max_iter = 90;
