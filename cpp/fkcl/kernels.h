@@ -7,8 +7,8 @@ __kernel void init_image(write_only image2d_t img, float x_start, float y_start,
     int col = get_global_id(0);
     int row = get_global_id(1);
 
-    float y = y_start + (float)row * pixel_step;
-    float x = x_start + (float)col * pixel_step;
+    double y = y_start + (float)row * pixel_step;
+    double x = x_start + (float)col * pixel_step;
 
     float ret = 0.0f;
     unsigned int max_iter = 90;
@@ -42,8 +42,8 @@ __kernel void init_image(write_only image2d_t img, float x_start, float y_start,
     int col = get_global_id(0);
     int row = get_global_id(1);
 
-    float y = y_start + (float)row * pixel_step;
-    float x = x_start + (float)col * pixel_step;
+    double y = y_start + (float)row * pixel_step;
+    double x = x_start + (float)col * pixel_step;
 
     float ret = 0.0f;
     unsigned int max_iter = 900;
@@ -72,7 +72,7 @@ __kernel void init_image(write_only image2d_t img, float x_start, float y_start,
 )CLC";
 
 
-// TODO - try to build this with a macro
+// This is to enable specifying which kernel to use in a config file
 std::unordered_map<std::string, std::string> kernels = {
     {"Mandelbrot", kernelMandelbrot},
     {"Julia", kernelJulia},

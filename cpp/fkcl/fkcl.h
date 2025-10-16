@@ -138,13 +138,15 @@ std::vector<float> readBackImageData(const size_t n_cols, const size_t n_rows, c
 cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std::vector<float>& hostData)
 {
     // TODO: Make it more colorful...
+    // 1. use val to determine hue
+    // 2. logarithmic transform to reduce banding
     cv::Mat fractalImage((int)n_rows, (int)n_cols, CV_32FC3);
     for (auto j = 0; j < n_cols; j++)
     {
         for (auto i = 0; i < n_rows; i++)
         {
             auto val = hostData[i * n_cols + j];
-            fractalImage.at<cv::Vec3f>(i, j) = { val, val, val };
+            fractalImage.at<cv::Vec3f>(i, j) = { val/2.0f, val/2.0f, val/2.0f };
         } 
     }
     return fractalImage;

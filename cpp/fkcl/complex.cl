@@ -8,13 +8,13 @@
  ******************************************************/
 
 // Uncomment for double precision (if supported)
-// #pragma OPENCL EXTENSION cl_khr_fp64 : enable
-// typedef double2 cfloat;
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+typedef double2 cfloat;
 // #define NATIVE_RECIP native_recip
 // #define NATIVE_SQRT  native_sqrt
 // #define FMA(a,b,c) fma(a,b,c)
 
-typedef float2 cfloat;
+//typedef float2 cfloat;
 #define NATIVE_RECIP native_recip
 #define NATIVE_SQRT  native_sqrt
 #define FMA(a,b,c) fma(a,b,c)

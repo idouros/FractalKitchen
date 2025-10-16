@@ -13,7 +13,6 @@
 
 FractalParams DEFAULT_PARAMS;
 
-
 int main(int argc, char** argv)
 {
     if (argc != 2)
@@ -22,7 +21,6 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    // Read the configuration file
     LOG_OUT("Reading config file...");
     ConfigParams configParams;
     boost::property_tree::ini_parser::read_ini(argv[1], configParams);
