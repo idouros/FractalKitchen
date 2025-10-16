@@ -7,6 +7,7 @@
 
 struct FractalParams {
     std::string type = "Mandelbrot";
+    unsigned int max_iter = 100;
     size_t n_cols = 1200;
     size_t n_rows = 900;
     size_t platformId = 0;
@@ -102,12 +103,13 @@ cl_int buildKernel(cl::Program& program, cl::Device& device)
 
 // --- Run a kernel
 void runKernel(
-    cl::Program& program, 
-    cl::Image2D& image, 
+    cl::Program& program,
+    cl::Image2D& image,
     cl::CommandQueue& queue,
     const float x_start,
     const float y_start,
     const float pixel_step,
+    const unsigned int max_iter,
     const size_t n_cols, 
     const size_t n_rows
 )
@@ -117,6 +119,7 @@ void runKernel(
     kernel.setArg(1, x_start);
     kernel.setArg(2, y_start);
     kernel.setArg(3, pixel_step);
+    kernel.setArg(4, max_iter);
     cl::NDRange global(n_cols, n_rows);
     queue.enqueueNDRangeKernel(kernel, cl::NullRange, global);
     queue.finish();

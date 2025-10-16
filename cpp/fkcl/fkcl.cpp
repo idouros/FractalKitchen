@@ -26,6 +26,7 @@ int main(int argc, char** argv)
     boost::property_tree::ini_parser::read_ini(argv[1], configParams);
     FractalParams p;
     p.type = configParams.get("fractal.type", DEFAULT_PARAMS.type);
+    p.max_iter = configParams.get<unsigned int>("fractal.max_iter", DEFAULT_PARAMS.max_iter);
     p.n_rows = configParams.get<size_t>("image.n_rows", DEFAULT_PARAMS.n_rows);
     p.n_cols = configParams.get<size_t>("image.n_cols", DEFAULT_PARAMS.n_cols);
     p.x_start = configParams.get<float>("image.x_start", DEFAULT_PARAMS.x_start);
@@ -73,7 +74,7 @@ int main(int argc, char** argv)
 
     LOG_OUT("Running the kernel...");
     cl::Image2D image(context, CL_MEM_WRITE_ONLY, format, p.n_cols, p.n_rows);
-    EXEC_TIMED(runKernel(program, image, queue, p.x_start, p.y_start, pixel_step, p.n_cols, p.n_rows);)
+    EXEC_TIMED(runKernel(program, image, queue, p.x_start, p.y_start, pixel_step, p.max_iter, p.n_cols, p.n_rows);)
 
     LOG_OUT("Generating fractal image...");
     std::vector<float> hostData = readBackImageData(p.n_cols, p.n_rows, queue, image);
