@@ -142,7 +142,7 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
 {
     // TODO: Make it more colorful...
     // 1. use val to determine hue
-    // 2. logarithmic transform to reduce banding
+    // 2. logarithmic transform to reduce banding (see Wikipedia article on Julia set)
     cv::Mat fractalImage((int)n_rows, (int)n_cols, CV_32FC3);
     for (auto j = 0; j < n_cols; j++)
     {
