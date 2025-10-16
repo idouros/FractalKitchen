@@ -5,12 +5,19 @@
 #include <sstream>
 #include <CL/opencl.hpp>
 
-// --- Miscellaneous helpers
+struct FractalParams {
+    std::string type = "Mandelbrot";
+    size_t n_cols = 1200;
+    size_t n_rows = 900;
+    size_t platformId = 0;
+    size_t deviceId = 0;
+    float x_start = -0.02f;
+    float x_end = 0.02f;
+    float y_start = -0.015f;
+    float y_end = std::numeric_limits<float>::quiet_NaN();
+    bool showDeviceList = false;
+};
 
-void sectionInfo(const std::string& s)
-{
-    std::cout << "===================================================" << std::endl << s << std::endl;
-}
 
 // --- OpenCL device management
 
@@ -105,7 +112,6 @@ void runKernel(
     const size_t n_rows
 )
 {
-    // TODO: Add timing information
     cl::Kernel kernel(program, "init_image");
     kernel.setArg(0, image);
     kernel.setArg(1, x_start);

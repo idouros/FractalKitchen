@@ -1,3 +1,7 @@
+#ifndef _KERNELS
+#define _KERNELS
+
+
 const char* kernelMandelbrot = R"CLC(
 __kernel void init_image(write_only image2d_t img, float x_start, float y_start, float pixel_step) {
     int col = get_global_id(0);
@@ -66,3 +70,13 @@ __kernel void init_image(write_only image2d_t img, float x_start, float y_start,
     write_imagef(img, (int2)(col, row), pixel);
 }
 )CLC";
+
+
+// TODO - try to build this with a macro
+std::unordered_map<std::string, std::string> kernels = {
+    {"Mandelbrot", kernelMandelbrot},
+    {"Julia", kernelJulia},
+};
+
+#endif
+

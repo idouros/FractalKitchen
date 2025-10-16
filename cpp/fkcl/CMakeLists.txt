@@ -3,12 +3,13 @@
 #
 
 # Add source to this project's executable.
-add_executable (fkcl "fkcl.cpp" "fkcl.h" "kernels.h" "kernels.h")
+add_executable (fkcl "fkcl.cpp" "fkcl.h" "kernels.h" "helpers.h")
 
 target_include_directories(fkcl
     PRIVATE
         $ENV{OPENCL_DIR}/include
         $ENV{OPENCV_DIR}/../../include
+        $ENV{BOOST_DIR}
 )
 
 target_link_directories(fkcl

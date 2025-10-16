@@ -5,68 +5,85 @@
 #include <filesystem>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
 #include "fkcl.h"
 #include "kernels.h"
+#include "helpers.h"
 
-int main()
+FractalParams DEFAULT_PARAMS;
+
+
+int main(int argc, char** argv)
 {
-	// TODO: Make these configurable
-    size_t n_cols = 1200;
-    size_t n_rows = 900;
-	size_t platformId = 0;
-	size_t deviceId = 0;
-    constexpr float x_start = -0.02; // TODO: consider using double precision
-    constexpr float x_end = 0.02;
-    constexpr float y_start = -0.015;
-    constexpr float y_end = std::numeric_limits<float>::quiet_NaN();
-    bool showDeviceList = false;
-
-    sectionInfo("Initializing essential parameters...");
-    cl::ImageFormat format(CL_R, CL_FLOAT);
-    auto pixel_step = -1.0f;
-    if(std::isnan(y_end))
+    if (argc != 2)
     {
-        pixel_step = (x_end - x_start) / (float)n_cols;
-    }
-    else if (std::isnan(x_end))
-    {
-        pixel_step = (y_end - y_start) / (float)n_rows;
-    }
-    else
-    {
-        std::cout << "Invalid arguments! At least one of x_end, y_end must be defined. Exiting..." << std::endl;
+        std::cout << " Usage: " << argv[0] << " ConfigFile" << std::endl;
         return -1;
     }
 
-    if (showDeviceList)
+    // Read the configuration file
+    LOG_OUT("Reading config file...");
+    ConfigParams configParams;
+    boost::property_tree::ini_parser::read_ini(argv[1], configParams);
+    FractalParams p;
+    p.type = configParams.get("fractal.type", DEFAULT_PARAMS.type);
+    p.n_rows = configParams.get<size_t>("image.n_rows", DEFAULT_PARAMS.n_rows);
+    p.n_cols = configParams.get<size_t>("image.n_cols", DEFAULT_PARAMS.n_cols);
+    p.x_start = configParams.get<float>("image.x_start", DEFAULT_PARAMS.x_start);
+    p.x_end = configParams.get<float>("image.x_end", DEFAULT_PARAMS.x_end);
+    p.y_start = configParams.get<float>("image.y_start", DEFAULT_PARAMS.y_start);
+    p.y_end = configParams.get<float>("image.y_end", DEFAULT_PARAMS.y_end);
+    p.platformId = configParams.get<size_t>("device.platformId", DEFAULT_PARAMS.platformId);
+    p.deviceId = configParams.get<size_t>("device.deviceId", DEFAULT_PARAMS.deviceId);
+    p.showDeviceList = configParams.get<bool>("device.showDeviceList", DEFAULT_PARAMS.showDeviceList);
+
+
+    LOG_OUT("Initializing essential parameters...");
+    cl::ImageFormat format(CL_R, CL_FLOAT);
+    auto pixel_step = -1.0f;
+    if(!std::isnan(p.x_end) && std::isnan(p.y_end))
     {
-        sectionInfo("Reading platforms and devices...");
+        pixel_step = (p.x_end - p.x_start) / (float)p.n_cols;
+    }
+    else if (!std::isnan(p.y_end) && std::isnan(p.x_end))
+    {
+        pixel_step = (p.y_end - p.y_start) / (float)p.n_rows;
+    }
+    else
+    {
+        std::cout << "Invalid arguments! Exactly one of x_end, y_end must be defined. Exiting..." << std::endl;
+        return -1;
+    }
+
+    if (p.showDeviceList)
+    {
+        LOG_OUT("Reading platforms and devices...");
         listDevices();
     }
 
-    sectionInfo("Getting the device...");
-    cl::Device device = getDevice(platformId, deviceId);
+    LOG_OUT("Getting the device...");
+    cl::Device device = getDevice(p.platformId, p.deviceId);
 	cl::Context context(device);
     cl::CommandQueue queue(context, device);
 
-    sectionInfo("Building the kernel...");
-    // TODO - kernel selection
+    LOG_OUT("Building the kernel...");
     std::string complexSource = readFile("complex.cl");
-    std::string fullSource = complexSource + "\n" + kernelJulia;
+    std::string fullSource = complexSource + "\n" + kernels[p.type];
     cl::Program program(context, fullSource);
-    cl_int err = buildKernel(program, device);
+    EXEC_TIMED(cl_int err = buildKernel(program, device);)
 
-    sectionInfo("Running the kernel...");
-    cl::Image2D image(context, CL_MEM_WRITE_ONLY, format, n_cols, n_rows);
-    runKernel(program, image, queue, x_start, y_start, pixel_step, n_cols, n_rows);
+    LOG_OUT("Running the kernel...");
+    cl::Image2D image(context, CL_MEM_WRITE_ONLY, format, p.n_cols, p.n_rows);
+    EXEC_TIMED(runKernel(program, image, queue, p.x_start, p.y_start, pixel_step, p.n_cols, p.n_rows);)
 
-    sectionInfo("Generating fractal image...");
-    std::vector<float> hostData = readBackImageData(n_cols, n_rows, queue, image);
-    cv::Mat fractalImage = generateFractalImage(n_rows, n_cols, hostData);
+    LOG_OUT("Generating fractal image...");
+    std::vector<float> hostData = readBackImageData(p.n_cols, p.n_rows, queue, image);
+    cv::Mat fractalImage = generateFractalImage(p.n_rows, p.n_cols, hostData);
 	cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE);
 	imshow("Display window", fractalImage);
 
-    sectionInfo("Image generation complete! Press any key to exit...");
+    LOG_OUT("Image generation complete! Press any key to exit...");
     // TODO: Add save option
 	cv::waitKey(0);
 	return 0;
