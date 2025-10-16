@@ -15,9 +15,9 @@ int main()
     size_t n_rows = 900;
 	size_t platformId = 0;
 	size_t deviceId = 0;
-    constexpr float x_start = -1.75;
-    constexpr float x_end = -1.25;
-    constexpr float y_start = -0.25;
+    constexpr float x_start = -0.02; // TODO: consider using double precision
+    constexpr float x_end = 0.02;
+    constexpr float y_start = -0.015;
     constexpr float y_end = std::numeric_limits<float>::quiet_NaN();
     bool showDeviceList = false;
 
@@ -50,8 +50,9 @@ int main()
     cl::CommandQueue queue(context, device);
 
     sectionInfo("Building the kernel...");
+    // TODO - kernel selection
     std::string complexSource = readFile("complex.cl");
-    std::string fullSource = complexSource + "\n" + kernelMandelbrot;
+    std::string fullSource = complexSource + "\n" + kernelJulia;
     cl::Program program(context, fullSource);
     cl_int err = buildKernel(program, device);
 
