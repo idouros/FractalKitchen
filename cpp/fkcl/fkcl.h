@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <CL/opencl.hpp>
+#include <opencv2/imgproc.hpp> 
 
 struct FractalParams {
     std::string type = "Mandelbrot";
@@ -153,19 +154,18 @@ std::vector<float> readBackImageData(const size_t n_cols, const size_t n_rows, c
 // --- Image Generation
 cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std::vector<float>& hostData)
 {
-    // TODO: Make it more colorful...
-    // 1. use val to determine hue
-    // 2. logarithmic transform to reduce banding (see Wikipedia article on Julia set)
-    cv::Mat fractalImage((int)n_rows, (int)n_cols, CV_32FC3);
+    cv::Mat fractalImageHSV((int)n_rows, (int)n_cols, CV_8UC3);
     for (auto j = 0; j < n_cols; j++)
     {
         for (auto i = 0; i < n_rows; i++)
         {
             auto val = hostData[i * n_cols + j];
-            fractalImage.at<cv::Vec3f>(i, j) = { val, val, val };
+            fractalImageHSV.at<cv::Vec3b>(i, j) = cv::Vec3b(static_cast<int>(std::lround(val * 179.0f)) + 135, 255, 255);
         } 
     }
-    return fractalImage;
+    cv::Mat fractalImageBGR;
+    cv::cvtColor(fractalImageHSV, fractalImageBGR, cv::COLOR_HSV2BGR);
+    return fractalImageBGR;
 }
 
 void zoom(float& x_start, float& x_end, float& y_start, float& y_end, const float zoom)
