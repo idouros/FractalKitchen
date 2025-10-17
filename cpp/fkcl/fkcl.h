@@ -149,8 +149,35 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
         for (auto i = 0; i < n_rows; i++)
         {
             auto val = hostData[i * n_cols + j];
-            fractalImage.at<cv::Vec3f>(i, j) = { val/2.0f, val/2.0f, val/2.0f };
+            fractalImage.at<cv::Vec3f>(i, j) = { val, val, val };
         } 
     }
     return fractalImage;
+}
+
+void zoom(float& x_start, float& x_end, float& y_start, float& y_end, const float zoom)
+{
+    auto x_mid = (x_start + x_end) / 2.0f;
+    auto y_mid = (y_start + y_end) / 2.0f;
+
+    auto x_offset = x_mid - x_start;
+    auto y_offset = y_mid - y_start;
+
+    x_start = x_mid - x_offset * (1 - zoom);
+    x_end = x_mid + x_offset * (1 - zoom);
+    y_start = y_mid - y_offset * (1 - zoom);
+    y_end = std::numeric_limits<float>::quiet_NaN();
+}
+
+void panVertical(float& y_start, float& y_end, const float pixel_step, const int n_pixels)
+{
+    y_start -= pixel_step * n_pixels;
+    y_end = std::numeric_limits<float>::quiet_NaN();
+}
+
+void panHorizontal(float& x_start, float& x_end, float& y_end, const float pixel_step, const int n_pixels)
+{
+    x_start -= pixel_step * n_pixels;
+    x_end -= pixel_step * n_pixels;
+    y_end = std::numeric_limits<float>::quiet_NaN();
 }

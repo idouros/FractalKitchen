@@ -3,6 +3,7 @@
 #define CL_HPP_TARGET_OPENCL_VERSION  300
 
 #include <filesystem>
+#include <conio.h>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -37,53 +38,109 @@ int main(int argc, char** argv)
     p.deviceId = configParams.get<size_t>("device.deviceId", DEFAULT_PARAMS.deviceId);
     p.showDeviceList = configParams.get<bool>("device.showDeviceList", DEFAULT_PARAMS.showDeviceList);
 
-
-    LOG_OUT("Initializing essential parameters...");
-    cl::ImageFormat format(CL_R, CL_FLOAT);
-    auto pixel_step = -1.0f;
-    if(!std::isnan(p.x_end) && std::isnan(p.y_end))
+    while(true)
     {
-        pixel_step = (p.x_end - p.x_start) / (float)p.n_cols;
+        LOG_OUT("Initializing essential parameters...");
+        cl::ImageFormat format(CL_R, CL_FLOAT);
+        auto pixel_step = -1.0f;
+        if (!std::isnan(p.x_end) && std::isnan(p.y_end))
+        {
+            pixel_step = (p.x_end - p.x_start) / (float)p.n_cols;
+            p.y_end = p.y_start + pixel_step * p.n_rows;
+        }
+        else if (!std::isnan(p.y_end) && std::isnan(p.x_end))
+        {
+            pixel_step = (p.y_end - p.y_start) / (float)p.n_rows;
+            p.x_end = p.x_start + pixel_step * p.n_cols;
+        }
+        else
+        {
+            std::cout << "Invalid arguments! Exactly one of x_end, y_end must be defined. Exiting..." << std::endl;
+            return -1;
+        }
+
+        if (p.showDeviceList)
+        {
+            LOG_OUT("Reading platforms and devices...");
+            listDevices();
+        }
+
+        LOG_OUT("Getting the device...");
+        cl::Device device = getDevice(p.platformId, p.deviceId);
+        cl::Context context(device);
+        cl::CommandQueue queue(context, device);
+
+        LOG_OUT("Building the kernel...");
+        std::string complexSource = readFile("complex.cl");
+        std::string fullSource = complexSource + "\n" + kernels[p.type];
+        cl::Program program(context, fullSource);
+        EXEC_TIMED(cl_int err = buildKernel(program, device);)
+
+        LOG_OUT("Running the kernel...");
+        cl::Image2D image(context, CL_MEM_WRITE_ONLY, format, p.n_cols, p.n_rows);
+        EXEC_TIMED(runKernel(program, image, queue, p.x_start, p.y_start, pixel_step, p.max_iter, p.n_cols, p.n_rows);)
+
+        LOG_OUT("Generating fractal image...");
+        std::vector<float> hostData = readBackImageData(p.n_cols, p.n_rows, queue, image);
+        cv::Mat fractalImage = generateFractalImage(p.n_rows, p.n_cols, hostData);
+        cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE);
+        imshow("Display window", fractalImage);
+
+        LOG_OUT("Image generation complete!");
+        auto waitForKey = true;
+        while (waitForKey)
+        {
+            auto key = cv::waitKeyEx(0);
+            if (key >= 0 && key <= 255)
+            {
+                char keyChar = std::tolower(key);
+                switch (keyChar)
+                {
+                case 'q':
+                    LOG_OUT("Exiting...");
+                    return 0;
+                case 'h':
+                    std::cout << "TODO : help text" << std::endl;
+                    break;
+                case 's':
+                    std::cout << "TODO : save image and config" << std::endl;
+                    break;
+                case '+':
+                    zoom(p.x_start, p.x_end, p.y_start, p.y_end, 0.05f);
+                    waitForKey = false;
+                    break;
+                case '-':
+                    zoom(p.x_start, p.x_end, p.y_start, p.y_end, -0.05f);
+                    waitForKey = false;
+                    break;
+                default:
+                    continue;
+                }
+            }
+            else
+            {
+                switch(key)
+                {
+                case 2490368: // Up arrow
+                    panVertical(p.y_start, p.y_end, pixel_step, -10);
+                    waitForKey = false;
+                    break;
+                case 2621440: // Down arrow
+                    panVertical(p.y_start, p.y_end, pixel_step, 10);
+                    waitForKey = false;
+                    break;
+                case 2424832: // Left arrow
+                    panHorizontal(p.x_start, p.x_end, p.y_end, pixel_step, -10);
+                    waitForKey = false;
+                    break;
+                case 2555904: // Right arrow
+                    panHorizontal(p.x_start, p.x_end, p.y_end, pixel_step, 10);
+                    waitForKey = false;
+                    break;
+                default:
+                    continue;
+                }
+            }
+        }
     }
-    else if (!std::isnan(p.y_end) && std::isnan(p.x_end))
-    {
-        pixel_step = (p.y_end - p.y_start) / (float)p.n_rows;
-    }
-    else
-    {
-        std::cout << "Invalid arguments! Exactly one of x_end, y_end must be defined. Exiting..." << std::endl;
-        return -1;
-    }
-
-    if (p.showDeviceList)
-    {
-        LOG_OUT("Reading platforms and devices...");
-        listDevices();
-    }
-
-    LOG_OUT("Getting the device...");
-    cl::Device device = getDevice(p.platformId, p.deviceId);
-	cl::Context context(device);
-    cl::CommandQueue queue(context, device);
-
-    LOG_OUT("Building the kernel...");
-    std::string complexSource = readFile("complex.cl");
-    std::string fullSource = complexSource + "\n" + kernels[p.type];
-    cl::Program program(context, fullSource);
-    EXEC_TIMED(cl_int err = buildKernel(program, device);)
-
-    LOG_OUT("Running the kernel...");
-    cl::Image2D image(context, CL_MEM_WRITE_ONLY, format, p.n_cols, p.n_rows);
-    EXEC_TIMED(runKernel(program, image, queue, p.x_start, p.y_start, pixel_step, p.max_iter, p.n_cols, p.n_rows);)
-
-    LOG_OUT("Generating fractal image...");
-    std::vector<float> hostData = readBackImageData(p.n_cols, p.n_rows, queue, image);
-    cv::Mat fractalImage = generateFractalImage(p.n_rows, p.n_cols, hostData);
-	cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE);
-	imshow("Display window", fractalImage);
-
-    LOG_OUT("Image generation complete! Press any key to exit...");
-    // TODO: Add save option
-	cv::waitKey(0);
-	return 0;
 }
