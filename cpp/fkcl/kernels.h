@@ -3,7 +3,10 @@
 
 
 const char* kernelMandelbrot = R"CLC(
-__kernel void init_image(write_only image2d_t img, float x_start, float y_start, float pixel_step, unsigned int max_iter) {
+__kernel void init_image(write_only image2d_t img, 
+        float x_start, float y_start, float pixel_step, unsigned int max_iter,
+        float divergence_threshold, float xtra_1, float xtra_2) 
+{
     int col = get_global_id(0);
     int row = get_global_id(1);
 
@@ -13,18 +16,18 @@ __kernel void init_image(write_only image2d_t img, float x_start, float y_start,
     float ret = 0.0f;
     unsigned int i = 0;
     bool keep_going = true;
-    cfloat z = (cfloat)(0.0f, 0.0f); // TODO: Make user configurable
+    cfloat z = (cfloat)(xtra_1, xtra_2);
     cfloat c = (cfloat)(x, y);
     while(keep_going)
     {
         z = c_add(c_mul(z, z), c);
         i += 1;
-        if( (i >= max_iter) || (c_abs(z) > 2) ) // TODO: Make user configurable
+        if( (i >= max_iter) || (c_abs(z) > divergence_threshold) )
         {
             keep_going = false;
         }
     }
-    if(c_abs(z) > 2)
+    if(c_abs(z) > divergence_threshold)
     {
         ret = (float)(max_iter - i) / (float)max_iter;
     }
@@ -37,7 +40,10 @@ __kernel void init_image(write_only image2d_t img, float x_start, float y_start,
 
 
 const char* kernelJulia = R"CLC(
-__kernel void init_image(write_only image2d_t img, float x_start, float y_start, float pixel_step, unsigned int max_iter) {
+__kernel void init_image(write_only image2d_t img, 
+        float x_start, float y_start, float pixel_step, unsigned int max_iter,
+        float divergence_threshold, float xtra_1, float xtra_2) 
+{
     int col = get_global_id(0);
     int row = get_global_id(1);
 
@@ -47,18 +53,18 @@ __kernel void init_image(write_only image2d_t img, float x_start, float y_start,
     float ret = 0.0f;
     unsigned int i = 0;
     bool keep_going = true;
-    cfloat c = (cfloat)(-0.8f, 0.156f);  // TODO: Make user configurable
+    cfloat c = (cfloat)(xtra_1, xtra_2);
     cfloat z = (cfloat)(x, y);
     while(keep_going)
     {
         z = c_add(c_mul(z, z), c);
         i += 1;
-        if( (i >= max_iter) || (c_abs(z) > 2) ) // TODO: Make user configurable
+        if( (i >= max_iter) || (c_abs(z) > divergence_threshold) )
         {
             keep_going = false;
         }
     }
-    if(c_abs(z) > 2)
+    if(c_abs(z) > divergence_threshold)
     {
         ret = (float)(max_iter - i) / (float)max_iter;
     }

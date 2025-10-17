@@ -25,6 +25,9 @@ target_link_libraries(fkcl
         optimized opencv_world4100
 )
 
+file(GLOB RESOURCE_FILES "*.config")
+set_source_files_properties(${RESOURCE_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)
+
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET fkcl PROPERTY CXX_STANDARD 20)
 endif()

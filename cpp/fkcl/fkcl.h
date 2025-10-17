@@ -8,15 +8,22 @@
 struct FractalParams {
     std::string type = "Mandelbrot";
     unsigned int max_iter = 100;
+    float divergence_threshold = 2.0f;
+    float xtra_1 = -0.0f;
+    std::string xtra_1_label = "?";
+    float xtra_2 = 0.0f;
+    std::string xtra_2_label = "?";
     size_t n_cols = 1200;
     size_t n_rows = 900;
-    size_t platformId = 0;
-    size_t deviceId = 0;
     float x_start = -0.02f;
     float x_end = 0.02f;
     float y_start = -0.015f;
     float y_end = std::numeric_limits<float>::quiet_NaN();
+    float zoom_step = 0.05f;
+    int pan_step = 10;
     bool showDeviceList = false;
+    size_t platformId = 0;
+    size_t deviceId = 0;
 };
 
 
@@ -110,6 +117,9 @@ void runKernel(
     const float y_start,
     const float pixel_step,
     const unsigned int max_iter,
+    const float divergence_threshold,
+    const float xtra_1,
+    const float xtra_2,
     const size_t n_cols, 
     const size_t n_rows
 )
@@ -120,6 +130,9 @@ void runKernel(
     kernel.setArg(2, y_start);
     kernel.setArg(3, pixel_step);
     kernel.setArg(4, max_iter);
+    kernel.setArg(5, divergence_threshold);
+    kernel.setArg(6, xtra_1);
+    kernel.setArg(7, xtra_2);
     cl::NDRange global(n_cols, n_rows);
     queue.enqueueNDRangeKernel(kernel, cl::NullRange, global);
     queue.finish();

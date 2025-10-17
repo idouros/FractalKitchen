@@ -28,15 +28,23 @@ int main(int argc, char** argv)
     FractalParams p;
     p.type = configParams.get("fractal.type", DEFAULT_PARAMS.type);
     p.max_iter = configParams.get<unsigned int>("fractal.max_iter", DEFAULT_PARAMS.max_iter);
+    p.divergence_threshold = configParams.get<float>("fractal.divergence_threshold", DEFAULT_PARAMS.divergence_threshold);
+    p.xtra_1 = configParams.get<float>("fractal.xtra_1", DEFAULT_PARAMS.xtra_1);
+    p.xtra_1_label = configParams.get("fractal.xtra_1_label", DEFAULT_PARAMS.xtra_1_label);
+    p.xtra_2 = configParams.get<float>("fractal.xtra_2", DEFAULT_PARAMS.xtra_2);
+    p.xtra_2_label = configParams.get("fractal.xtra_2_label", DEFAULT_PARAMS.xtra_2_label);
     p.n_rows = configParams.get<size_t>("image.n_rows", DEFAULT_PARAMS.n_rows);
     p.n_cols = configParams.get<size_t>("image.n_cols", DEFAULT_PARAMS.n_cols);
     p.x_start = configParams.get<float>("image.x_start", DEFAULT_PARAMS.x_start);
     p.x_end = configParams.get<float>("image.x_end", DEFAULT_PARAMS.x_end);
     p.y_start = configParams.get<float>("image.y_start", DEFAULT_PARAMS.y_start);
     p.y_end = configParams.get<float>("image.y_end", DEFAULT_PARAMS.y_end);
+    p.zoom_step = configParams.get<float>("image.zoom_step", DEFAULT_PARAMS.zoom_step);
+    p.pan_step = configParams.get<int>("image.pan_step", DEFAULT_PARAMS.pan_step);
     p.platformId = configParams.get<size_t>("device.platformId", DEFAULT_PARAMS.platformId);
     p.deviceId = configParams.get<size_t>("device.deviceId", DEFAULT_PARAMS.deviceId);
     p.showDeviceList = configParams.get<bool>("device.showDeviceList", DEFAULT_PARAMS.showDeviceList);
+ 
 
     while(true)
     {
@@ -77,8 +85,11 @@ int main(int argc, char** argv)
         EXEC_TIMED(cl_int err = buildKernel(program, device);)
 
         LOG_OUT("Running the kernel...");
+        // TODO output fractal type
         cl::Image2D image(context, CL_MEM_WRITE_ONLY, format, p.n_cols, p.n_rows);
-        EXEC_TIMED(runKernel(program, image, queue, p.x_start, p.y_start, pixel_step, p.max_iter, p.n_cols, p.n_rows);)
+        EXEC_TIMED(runKernel(program, image, queue, p.x_start, p.y_start, pixel_step, p.max_iter, 
+            p.divergence_threshold, p.xtra_1, p.xtra_2, // TODO output fractal type and these 
+            p.n_cols, p.n_rows);)
 
         LOG_OUT("Generating fractal image...");
         std::vector<float> hostData = readBackImageData(p.n_cols, p.n_rows, queue, image);
@@ -106,11 +117,11 @@ int main(int argc, char** argv)
                     std::cout << "TODO : save image and config" << std::endl;
                     break;
                 case '+':
-                    zoom(p.x_start, p.x_end, p.y_start, p.y_end, 0.05f);
+                    zoom(p.x_start, p.x_end, p.y_start, p.y_end, p.zoom_step);
                     waitForKey = false;
                     break;
                 case '-':
-                    zoom(p.x_start, p.x_end, p.y_start, p.y_end, -0.05f);
+                    zoom(p.x_start, p.x_end, p.y_start, p.y_end, -p.zoom_step);
                     waitForKey = false;
                     break;
                 default:
@@ -119,22 +130,23 @@ int main(int argc, char** argv)
             }
             else
             {
+                // TODO: make this cross-platform (will work only on Windows)
                 switch(key)
                 {
                 case 2490368: // Up arrow
-                    panVertical(p.y_start, p.y_end, pixel_step, -10);
+                    panVertical(p.y_start, p.y_end, pixel_step, -p.pan_step);
                     waitForKey = false;
                     break;
                 case 2621440: // Down arrow
-                    panVertical(p.y_start, p.y_end, pixel_step, 10);
+                    panVertical(p.y_start, p.y_end, pixel_step, p.pan_step);
                     waitForKey = false;
                     break;
                 case 2424832: // Left arrow
-                    panHorizontal(p.x_start, p.x_end, p.y_end, pixel_step, -10);
+                    panHorizontal(p.x_start, p.x_end, p.y_end, pixel_step, -p.pan_step);
                     waitForKey = false;
                     break;
                 case 2555904: // Right arrow
-                    panHorizontal(p.x_start, p.x_end, p.y_end, pixel_step, 10);
+                    panHorizontal(p.x_start, p.x_end, p.y_end, pixel_step, p.pan_step);
                     waitForKey = false;
                     break;
                 default:
