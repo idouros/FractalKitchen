@@ -85,11 +85,14 @@ int main(int argc, char** argv)
         EXEC_TIMED(cl_int err = buildKernel(program, device);)
 
         LOG_OUT("Running the kernel...");
-        // TODO output fractal type
         cl::Image2D image(context, CL_MEM_WRITE_ONLY, format, p.n_cols, p.n_rows);
-        EXEC_TIMED(runKernel(program, image, queue, p.x_start, p.y_start, pixel_step, p.max_iter, 
-            p.divergence_threshold, p.xtra_1, p.xtra_2, // TODO output fractal type and these 
-            p.n_cols, p.n_rows);)
+        LOG_OUT("\t  Generating fractal of type: " + p.type);
+        LOG_OUT("\tMaximum number of iterations: " + std::to_string(p.max_iter));
+        LOG_OUT("\t        Divergence threshold: " + std::to_string(p.divergence_threshold));
+        LOG_OUT("\t           Extra parameter 1: " + p.xtra_1_label + ": " + std::to_string(p.xtra_1));
+        LOG_OUT("\t           Extra parameter 2: " + p.xtra_2_label + ": " + std::to_string(p.xtra_2));
+        EXEC_TIMED(runKernel(program, image, queue, p.x_start, p.y_start, pixel_step, p.max_iter,
+            p.divergence_threshold, p.xtra_1, p.xtra_2, p.n_cols, p.n_rows);)
 
         LOG_OUT("Generating fractal image...");
         std::vector<float> hostData = readBackImageData(p.n_cols, p.n_rows, queue, image);
