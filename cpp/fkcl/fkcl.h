@@ -4,7 +4,8 @@
 #include <fstream>
 #include <sstream>
 #include <CL/opencl.hpp>
-#include <opencv2/imgproc.hpp> 
+#include <opencv2/imgproc.hpp>
+#include "helpers.h"
 
 struct FractalParams {
     std::string type = "Mandelbrot";
@@ -160,7 +161,10 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
         for (auto i = 0; i < n_rows; i++)
         {
             auto val = hostData[i * n_cols + j];
-            fractalImageHSV.at<cv::Vec3b>(i, j) = cv::Vec3b(static_cast<int>(std::lround(val * 179.0f)) + 135, 255, 255);
+            auto h = static_cast<int>(std::lround(val * 179.0f)) + 180;
+            auto s = 127;
+            auto v = IsAlmostEqual(val, 0.0f) ? 0 : 255;
+            fractalImageHSV.at<cv::Vec3b>(i, j) = cv::Vec3b(h, s, v);
         } 
     }
     cv::Mat fractalImageBGR;

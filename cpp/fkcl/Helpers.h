@@ -64,4 +64,15 @@ T ReadEnumFromConfigParams(const ConfigParams& configParams,
 	}
 }
 
+template <typename T>
+bool IsAlmostEqual(const T& v1, const T& v2, double epsilon = 1e-5)
+{
+	if (fabs(v1 - v2) > epsilon)
+	{
+		return false;
+	}
+	return true;
+}
+
+
 #endif

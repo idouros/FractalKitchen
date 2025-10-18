@@ -21,11 +21,11 @@ __kernel void init_image(write_only image2d_t img,
     while(keep_going)
     {
         z = c_add(c_mul(z, z), c);
-        i += 1;
         if( (i >= max_iter) || (c_abs(z) > divergence_threshold) )
         {
             keep_going = false;
         }
+        else i++;
     }
     if(c_abs(z) > divergence_threshold)
     {
@@ -58,11 +58,11 @@ __kernel void init_image(write_only image2d_t img,
     while(keep_going)
     {
         z = c_add(c_mul(z, z), c);
-        i += 1;
         if( (i >= max_iter) || (c_abs(z) > divergence_threshold) )
         {
             keep_going = false;
         }
+        else i++;
     }
     if(c_abs(z) > divergence_threshold)
     {
