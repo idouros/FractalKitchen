@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <filesystem>
 #include <CL/opencl.hpp>
 #include <opencv2/imgproc.hpp>
 #include "helpers.h"
@@ -21,6 +22,7 @@ struct FractalParams {
     float x_end = 0.02f;
     float y_start = -0.015f;
     float y_end = std::numeric_limits<float>::quiet_NaN();
+    std::string output_dir = "/fractals";
     float zoom_step = 0.05f;
     int pan_step = 10;
     bool showDeviceList = false;
@@ -163,13 +165,33 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
             auto val = hostData[i * n_cols + j];
             auto h = static_cast<int>(std::lround(val * 179.0f)) + 180;
             auto s = 127;
-            auto v = IsAlmostEqual(val, 0.0f) ? 0 : 255;
+            auto v = isAlmostEqual(val, 0.0f) ? 0 : 255;
             fractalImageHSV.at<cv::Vec3b>(i, j) = cv::Vec3b(h, s, v);
         } 
     }
     cv::Mat fractalImageBGR;
     cv::cvtColor(fractalImageHSV, fractalImageBGR, cv::COLOR_HSV2BGR);
     return fractalImageBGR;
+}
+
+std::string formatTimestamp(std::time_t t) 
+{
+    auto now = std::chrono::system_clock::now();
+    return std::format("{:%Y%m%d_%H%M%S}", now);
+}
+
+void saveFractalImageAndConfig(const cv::Mat& fractalImage, const FractalParams& p)
+{
+    if (!std::filesystem::exists(p.output_dir))
+    {
+        std::filesystem::create_directory(p.output_dir);
+    }
+    auto output_file_name = "fk_" + p.type + "_" + formatTimestamp(std::time(nullptr));
+    std::filesystem::path image_file_path = std::filesystem::path(p.output_dir) / (output_file_name + ".png");
+    cv::imwrite(image_file_path.string(), fractalImage);
+    LOG_OUT("Saved: " + image_file_path.string());
+    // TODO : also save the config
+    //std::filesystem::path config_file_path = std::filesystem::path(p.output_dir) / (output_file_name + ".config");
 }
 
 void zoom(float& x_start, float& x_end, float& y_start, float& y_end, const float zoom)

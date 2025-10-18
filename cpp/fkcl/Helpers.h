@@ -46,7 +46,7 @@ std::string getFileParameter(const std::filesystem::path& configFilePath,
 }
 
 template<typename T>
-T ReadEnumFromConfigParams(const ConfigParams& configParams,
+T readEnumFromConfigParams(const ConfigParams& configParams,
 	const std::map<std::string, T>& enum_map,
 	const std::string& key,
 	const std::string& defaultValue)
@@ -65,7 +65,7 @@ T ReadEnumFromConfigParams(const ConfigParams& configParams,
 }
 
 template <typename T>
-bool IsAlmostEqual(const T& v1, const T& v2, double epsilon = 1e-5)
+bool isAlmostEqual(const T& v1, const T& v2, double epsilon = 1e-5)
 {
 	if (fabs(v1 - v2) > epsilon)
 	{
@@ -73,6 +73,5 @@ bool IsAlmostEqual(const T& v1, const T& v2, double epsilon = 1e-5)
 	}
 	return true;
 }
-
 
 #endif

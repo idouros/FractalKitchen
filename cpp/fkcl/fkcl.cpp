@@ -39,6 +39,7 @@ int main(int argc, char** argv)
     p.x_end = configParams.get<float>("image.x_end", DEFAULT_PARAMS.x_end);
     p.y_start = configParams.get<float>("image.y_start", DEFAULT_PARAMS.y_start);
     p.y_end = configParams.get<float>("image.y_end", DEFAULT_PARAMS.y_end);
+    p.output_dir = configParams.get("image.output_dir", DEFAULT_PARAMS.output_dir);
     p.zoom_step = configParams.get<float>("image.zoom_step", DEFAULT_PARAMS.zoom_step);
     p.pan_step = configParams.get<int>("image.pan_step", DEFAULT_PARAMS.pan_step);
     p.platformId = configParams.get<size_t>("device.platformId", DEFAULT_PARAMS.platformId);
@@ -117,7 +118,8 @@ int main(int argc, char** argv)
                     std::cout << "TODO : help text" << std::endl;
                     break;
                 case 's':
-                    std::cout << "TODO : save image and config" << std::endl;
+                    LOG_OUT("Saving image and config...");
+                    saveFractalImageAndConfig(fractalImage, p);
                     break;
                 case '+':
                     zoom(p.x_start, p.x_end, p.y_start, p.y_end, p.zoom_step);
