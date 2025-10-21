@@ -1,3 +1,8 @@
+/*********************************************************
+ * helpers.h — General purpose helper functions and macros
+ * Author: Yannis Douros (with help from StackOveflow)
+ *********************************************************/
+
 #ifndef _HELPERS
 #define _HELPERS
 

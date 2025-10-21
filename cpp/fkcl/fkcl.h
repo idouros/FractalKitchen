@@ -1,4 +1,8 @@
-﻿#pragma once
+﻿/*********************************************************
+ * fkcl.h — Application specific helpers and funtions
+ * Author: Yannis Douros
+ *********************************************************/
+#pragma once
 
 #include <iostream>
 #include <fstream>
@@ -6,7 +10,11 @@
 #include <filesystem>
 #include <CL/opencl.hpp>
 #include <opencv2/imgproc.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
 #include "helpers.h"
+
+typedef boost::property_tree::ptree ConfigParams;
 
 struct FractalParams {
     std::string type = "Mandelbrot";
@@ -186,12 +194,48 @@ void saveFractalImageAndConfig(const cv::Mat& fractalImage, const FractalParams&
     {
         std::filesystem::create_directory(p.output_dir);
     }
+
+    // Save the image
+
     auto output_file_name = "fk_" + p.type + "_" + formatTimestamp(std::time(nullptr));
     std::filesystem::path image_file_path = std::filesystem::path(p.output_dir) / (output_file_name + ".png");
     cv::imwrite(image_file_path.string(), fractalImage);
     LOG_OUT("Saved: " + image_file_path.string());
-    // TODO : also save the config
-    //std::filesystem::path config_file_path = std::filesystem::path(p.output_dir) / (output_file_name + ".config");
+
+    // Save the config
+
+    std::filesystem::path config_file_path = std::filesystem::path(p.output_dir) / (output_file_name + ".config");
+    ConfigParams configParams;
+    
+    boost::property_tree::ptree p_fractal;
+    p_fractal.add("type", p.type);
+    p_fractal.add("max_iter", p.max_iter);
+    p_fractal.add("divergence_threshold", p.divergence_threshold);
+    p_fractal.add("xtra_1", p.xtra_1);
+    p_fractal.add("xtra_1_label", p.xtra_1_label);
+    p_fractal.add("xtra_2", p.xtra_2);
+    p_fractal.add("xtra_2_label", p.xtra_2_label);
+    configParams.add_child("fractal", p_fractal);
+
+    boost::property_tree::ptree p_image;
+    p_image.add("n_rows", p.n_rows);
+    p_image.add("n_cols", p.n_cols);
+    p_image.add("x_start", p.x_start);
+    p_image.add("x_end", p.x_end);
+    p_image.add("y_start", p.y_start);
+    p_image.add("output_dir", p.output_dir);
+    p_image.add("zoom_step", p.zoom_step);
+    p_image.add("pan_step", p.pan_step);
+    configParams.add_child("image", p_image);
+
+    boost::property_tree::ptree p_device;
+    p_device.add("platformId", p.platformId);
+    p_device.add("deviceId", p.deviceId);
+    p_device.add("showDeviceList", p.showDeviceList);
+    configParams.add_child("device", p_device);
+
+    boost::property_tree::ini_parser::write_ini(config_file_path.string(), configParams);
+    LOG_OUT("Saved: " + config_file_path.string());
 }
 
 void zoom(float& x_start, float& x_end, float& y_start, float& y_end, const float zoom)
@@ -219,4 +263,16 @@ void panHorizontal(float& x_start, float& x_end, float& y_end, const float pixel
     x_start -= pixel_step * n_pixels;
     x_end -= pixel_step * n_pixels;
     y_end = std::numeric_limits<float>::quiet_NaN();
+}
+
+void showHelpText()
+{
+    std::cout << "-----------------------------------------------------------------" << std::endl;
+    std::cout << "\t+\tZoom in" << std::endl;
+    std::cout << "\t-\tZoom out" << std::endl;
+    std::cout << "\t(arrows)\t Pan the image up/down - left/right" << std::endl;
+    std::cout << "\tS\tSave the current image and the config parameters" << std::endl;
+    std::cout << "\tH\tDisplay this help text" << std::endl;
+    std::cout << "\tQ\tQuit" << std::endl;
+    std::cout << "-----------------------------------------------------------------" << std::endl;
 }

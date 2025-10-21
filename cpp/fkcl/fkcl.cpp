@@ -1,5 +1,8 @@
-﻿// fkcl.cpp : Defines the entry point for the application.
-//
+﻿/*********************************************************
+ * fkcl.cpp — FractalKitchen main entry point for app
+ * Author: Yannis Douros
+ *********************************************************/
+
 #define CL_HPP_TARGET_OPENCL_VERSION  300
 
 #include <filesystem>
@@ -105,6 +108,7 @@ int main(int argc, char** argv)
         auto waitForKey = true;
         while (waitForKey)
         {
+            LOG_OUT("Press a key (H for help) > ");
             auto key = cv::waitKeyEx(0);
             if (key >= 0 && key <= 255)
             {
@@ -115,7 +119,7 @@ int main(int argc, char** argv)
                     LOG_OUT("Exiting...");
                     return 0;
                 case 'h':
-                    std::cout << "TODO : help text" << std::endl;
+                    showHelpText();
                     break;
                 case 's':
                     LOG_OUT("Saving image and config...");

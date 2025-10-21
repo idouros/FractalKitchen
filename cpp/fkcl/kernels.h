@@ -1,6 +1,12 @@
+/*********************************************************
+ * kernels.h — OpenCL kernels for fractal generation
+ * Author: Yannis Douros
+ *********************************************************/
 #ifndef _KERNELS
 #define _KERNELS
 
+
+// TODO: "Better than double" precision for "infinite" zooming
 
 const char* kernelMandelbrot = R"CLC(
 __kernel void init_image(write_only image2d_t img, 
