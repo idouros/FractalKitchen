@@ -105,63 +105,10 @@ int main(int argc, char** argv)
         imshow("Display window", fractalImage);
 
         LOG_OUT("Image generation complete!");
-        auto waitForKey = true;
-        while (waitForKey)
+        auto retVal = navigateFractalImage(fractalImage, p, pixel_step);
+        if (retVal <= 0)
         {
-            LOG_OUT("Press a key (H for help) > ");
-            auto key = cv::waitKeyEx(0);
-            if (key >= 0 && key <= 255)
-            {
-                char keyChar = std::tolower(key);
-                switch (keyChar)
-                {
-                case 'q':
-                    LOG_OUT("Exiting...");
-                    return 0;
-                case 'h':
-                    showHelpText();
-                    break;
-                case 's':
-                    LOG_OUT("Saving image and config...");
-                    saveFractalImageAndConfig(fractalImage, p);
-                    break;
-                case '+':
-                    zoom(p.x_start, p.x_end, p.y_start, p.y_end, p.zoom_step);
-                    waitForKey = false;
-                    break;
-                case '-':
-                    zoom(p.x_start, p.x_end, p.y_start, p.y_end, -p.zoom_step);
-                    waitForKey = false;
-                    break;
-                default:
-                    continue;
-                }
-            }
-            else
-            {
-                // TODO: make this cross-platform (will work only on Windows)
-                switch(key)
-                {
-                case 2490368: // Up arrow
-                    panVertical(p.y_start, p.y_end, pixel_step, -p.pan_step);
-                    waitForKey = false;
-                    break;
-                case 2621440: // Down arrow
-                    panVertical(p.y_start, p.y_end, pixel_step, p.pan_step);
-                    waitForKey = false;
-                    break;
-                case 2424832: // Left arrow
-                    panHorizontal(p.x_start, p.x_end, p.y_end, pixel_step, -p.pan_step);
-                    waitForKey = false;
-                    break;
-                case 2555904: // Right arrow
-                    panHorizontal(p.x_start, p.x_end, p.y_end, pixel_step, p.pan_step);
-                    waitForKey = false;
-                    break;
-                default:
-                    continue;
-                }
-            }
+            return retVal;
         }
     }
 }

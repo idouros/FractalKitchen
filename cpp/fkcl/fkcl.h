@@ -276,3 +276,83 @@ void showHelpText()
     std::cout << "\tQ\tQuit" << std::endl;
     std::cout << "-----------------------------------------------------------------" << std::endl;
 }
+
+// Image navigation
+
+#define NAVIGATION_END      0
+#define NAVIGATION_REPEAT   1
+
+#ifdef _WIN32
+    #define ARROW_KEY_UP    2490368
+    #define ARROW_KEY_DOWN  2621440    
+    #define ARROW_KEY_LEFT  2424832    
+    #define ARROW_KEY_RIGHT 2555904   
+#elif __linux__
+    #define ARROW_KEY_UP    65362
+    #define ARROW_KEY_DOWN  65364  
+    #define ARROW_KEY_LEFT  65361  
+    #define ARROW_KEY_RIGHT 65363  
+#endif
+
+int navigateFractalImage(cv::Mat& fractalImage, FractalParams& p, float& pixel_step)
+{
+    auto waitForKey = true;
+    while (waitForKey)
+    {
+        LOG_OUT("Press a key (H for help) > ");
+        auto key = cv::waitKeyEx(0);
+        if (key >= 0 && key <= 255)
+        {
+            char keyChar = std::tolower(key);
+            switch (keyChar)
+            {
+            case 'q':
+                LOG_OUT("Exiting...");
+                return NAVIGATION_END;
+            case 'h':
+                showHelpText();
+                break;
+            case 's':
+                LOG_OUT("Saving image and config...");
+                saveFractalImageAndConfig(fractalImage, p);
+                break;
+            case '+':
+                zoom(p.x_start, p.x_end, p.y_start, p.y_end, p.zoom_step);
+                waitForKey = false;
+                break;
+            case '-':
+                zoom(p.x_start, p.x_end, p.y_start, p.y_end, -p.zoom_step);
+                waitForKey = false;
+                break;
+            default:
+                continue;
+            }
+        }
+        else
+        {
+            switch (key)
+            {
+            case ARROW_KEY_UP:
+                panVertical(p.y_start, p.y_end, pixel_step, -p.pan_step);
+                waitForKey = false;
+                break;
+            case ARROW_KEY_DOWN:
+                panVertical(p.y_start, p.y_end, pixel_step, p.pan_step);
+                waitForKey = false;
+                break;
+            case ARROW_KEY_LEFT:
+                panHorizontal(p.x_start, p.x_end, p.y_end, pixel_step, -p.pan_step);
+                waitForKey = false;
+                break;
+            case ARROW_KEY_RIGHT:
+                panHorizontal(p.x_start, p.x_end, p.y_end, pixel_step, p.pan_step);
+                waitForKey = false;
+                break;
+            default:
+                continue;
+            }
+        }
+    }
+    return NAVIGATION_REPEAT;
+}
+
