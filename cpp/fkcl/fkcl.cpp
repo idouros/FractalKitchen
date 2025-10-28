@@ -81,6 +81,11 @@ int main(int argc, char** argv)
         cl::Device device = getDevice(p.platformId, p.deviceId);
         cl::Context context(device);
         cl::CommandQueue queue(context, device);
+#ifdef cl_khr_fp64
+        LOG_OUT("Double precision supported!");
+#else
+        LOG_OUT("Double precision NOT supported! - single precision will be used.");
+#endif
 
         LOG_OUT("Building the kernel...");
         std::string complexSource = readFile("complex.cl");

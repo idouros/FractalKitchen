@@ -7,14 +7,14 @@
  *   Built for fast, numerically stable GPU math.
  ******************************************************/
 
-// Uncomment for double precision (if supported)
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
-typedef double2 cfloat;
-// #define NATIVE_RECIP native_recip
-// #define NATIVE_SQRT  native_sqrt
-// #define FMA(a,b,c) fma(a,b,c)
+// Double precision by default if supported, otherwise fall back on single precision
+#ifdef cl_khr_fp64
+    #pragma OPENCL EXTENSION cl_khr_fp64 : enable
+    typedef double2 cfloat;
+#else
+    typedef float2 cfloat;
+#endif
 
-//typedef float2 cfloat;
 #define NATIVE_RECIP native_recip
 #define NATIVE_SQRT  native_sqrt
 #define FMA(a,b,c) fma(a,b,c)
