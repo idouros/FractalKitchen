@@ -10,16 +10,16 @@
 
 const char* kernelMandelbrot = R"CLC(
 __kernel void init_image(write_only image2d_t img, 
-        float x_start, float y_start, float pixel_step, unsigned int max_iter,
-        float divergence_threshold, float xtra_1, float xtra_2) 
+        double x_start, double y_start, double pixel_step, unsigned int max_iter,
+        double divergence_threshold, double xtra_1, double xtra_2) 
 {
     int col = get_global_id(0);
     int row = get_global_id(1);
 
-    double y = y_start + (float)row * pixel_step;
-    double x = x_start + (float)col * pixel_step;
+    double y = y_start + (double)row * pixel_step;
+    double x = x_start + (double)col * pixel_step;
 
-    float ret = 0.0f;
+    float ret = 0.0;
     unsigned int i = 0;
     bool keep_going = true;
     cfloat z = (cfloat)(xtra_1, xtra_2);
@@ -47,16 +47,16 @@ __kernel void init_image(write_only image2d_t img,
 
 const char* kernelJulia = R"CLC(
 __kernel void init_image(write_only image2d_t img, 
-        float x_start, float y_start, float pixel_step, unsigned int max_iter,
-        float divergence_threshold, float xtra_1, float xtra_2) 
+        double x_start, double y_start, double pixel_step, unsigned int max_iter,
+        double divergence_threshold, double xtra_1, double xtra_2) 
 {
     int col = get_global_id(0);
     int row = get_global_id(1);
 
-    double y = y_start + (float)row * pixel_step;
-    double x = x_start + (float)col * pixel_step;
+    double y = y_start + (double)row * pixel_step;
+    double x = x_start + (double)col * pixel_step;
 
-    float ret = 0.0f;
+    float ret = 0.0;
     unsigned int i = 0;
     bool keep_going = true;
     cfloat c = (cfloat)(xtra_1, xtra_2);

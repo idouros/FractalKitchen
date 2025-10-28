@@ -97,15 +97,3 @@ inline float2 c_to_vec(cfloat a) {
     return (float2)(a.x, a.y);
 }
 
-/*************** EXAMPLE KERNEL ****************/
-
-__kernel void complex_mul_array(
-    __global const cfloat* A,
-    __global const cfloat* B,
-    __global cfloat* C,
-    const int n)
-{
-    int i = get_global_id(0);
-    if (i < n)
-        C[i] = c_mul(A[i], B[i]);
-}

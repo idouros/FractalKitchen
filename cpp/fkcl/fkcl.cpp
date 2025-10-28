@@ -27,23 +27,23 @@ int main(int argc, char** argv)
 
     LOG_OUT("Reading config file...");
     ConfigParams configParams;
-    boost::property_tree::ini_parser::read_ini(argv[1], configParams);
+    boost::property_tree::ini_parser::read_ini(argv[1], configParams); // TODO: Handle invalid/absent file
     FractalParams p;
     p.type = configParams.get("fractal.type", DEFAULT_PARAMS.type);
     p.max_iter = configParams.get<unsigned int>("fractal.max_iter", DEFAULT_PARAMS.max_iter);
-    p.divergence_threshold = configParams.get<float>("fractal.divergence_threshold", DEFAULT_PARAMS.divergence_threshold);
-    p.xtra_1 = configParams.get<float>("fractal.xtra_1", DEFAULT_PARAMS.xtra_1);
+    p.divergence_threshold = configParams.get<double>("fractal.divergence_threshold", DEFAULT_PARAMS.divergence_threshold);
+    p.xtra_1 = configParams.get<double>("fractal.xtra_1", DEFAULT_PARAMS.xtra_1);
     p.xtra_1_label = configParams.get("fractal.xtra_1_label", DEFAULT_PARAMS.xtra_1_label);
-    p.xtra_2 = configParams.get<float>("fractal.xtra_2", DEFAULT_PARAMS.xtra_2);
+    p.xtra_2 = configParams.get<double>("fractal.xtra_2", DEFAULT_PARAMS.xtra_2);
     p.xtra_2_label = configParams.get("fractal.xtra_2_label", DEFAULT_PARAMS.xtra_2_label);
     p.n_rows = configParams.get<size_t>("image.n_rows", DEFAULT_PARAMS.n_rows);
     p.n_cols = configParams.get<size_t>("image.n_cols", DEFAULT_PARAMS.n_cols);
-    p.x_start = configParams.get<float>("image.x_start", DEFAULT_PARAMS.x_start);
-    p.x_end = configParams.get<float>("image.x_end", DEFAULT_PARAMS.x_end);
-    p.y_start = configParams.get<float>("image.y_start", DEFAULT_PARAMS.y_start);
-    p.y_end = configParams.get<float>("image.y_end", DEFAULT_PARAMS.y_end);
+    p.x_start = configParams.get<double>("image.x_start", DEFAULT_PARAMS.x_start);
+    p.x_end = configParams.get<double>("image.x_end", DEFAULT_PARAMS.x_end);
+    p.y_start = configParams.get<double>("image.y_start", DEFAULT_PARAMS.y_start);
+    p.y_end = configParams.get<double>("image.y_end", DEFAULT_PARAMS.y_end);
     p.output_dir = configParams.get("image.output_dir", DEFAULT_PARAMS.output_dir);
-    p.zoom_step = configParams.get<float>("image.zoom_step", DEFAULT_PARAMS.zoom_step);
+    p.zoom_step = configParams.get<double>("image.zoom_step", DEFAULT_PARAMS.zoom_step);
     p.pan_step = configParams.get<int>("image.pan_step", DEFAULT_PARAMS.pan_step);
     p.platformId = configParams.get<size_t>("device.platformId", DEFAULT_PARAMS.platformId);
     p.deviceId = configParams.get<size_t>("device.deviceId", DEFAULT_PARAMS.deviceId);
@@ -54,15 +54,15 @@ int main(int argc, char** argv)
     {
         LOG_OUT("Initializing essential parameters...");
         cl::ImageFormat format(CL_R, CL_FLOAT);
-        auto pixel_step = -1.0f;
+        double pixel_step = -1.0;
         if (!std::isnan(p.x_end) && std::isnan(p.y_end))
         {
-            pixel_step = (p.x_end - p.x_start) / (float)p.n_cols;
+            pixel_step = (p.x_end - p.x_start) / (double)p.n_cols;
             p.y_end = p.y_start + pixel_step * p.n_rows;
         }
         else if (!std::isnan(p.y_end) && std::isnan(p.x_end))
         {
-            pixel_step = (p.y_end - p.y_start) / (float)p.n_rows;
+            pixel_step = (p.y_end - p.y_start) / (double)p.n_rows;
             p.x_end = p.x_start + pixel_step * p.n_cols;
         }
         else
@@ -103,6 +103,7 @@ int main(int argc, char** argv)
         cv::Mat fractalImage = generateFractalImage(p.n_rows, p.n_cols, hostData);
         cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE);
         imshow("Display window", fractalImage);
+        // TODO: Quit if user closes window.
 
         LOG_OUT("Image generation complete!");
         auto retVal = navigateFractalImage(fractalImage, p, pixel_step);

@@ -19,19 +19,19 @@ typedef boost::property_tree::ptree ConfigParams;
 struct FractalParams {
     std::string type = "Mandelbrot";
     unsigned int max_iter = 100;
-    float divergence_threshold = 2.0f;
-    float xtra_1 = -0.0f;
+    double divergence_threshold = 2.0;
+    double xtra_1 = -0.0;
     std::string xtra_1_label = "?";
-    float xtra_2 = 0.0f;
+    double xtra_2 = 0.0;
     std::string xtra_2_label = "?";
     size_t n_cols = 1200;
     size_t n_rows = 900;
-    float x_start = -0.02f;
-    float x_end = 0.02f;
-    float y_start = -0.015f;
-    float y_end = std::numeric_limits<float>::quiet_NaN();
+    double x_start = -0.02;
+    double x_end = 0.02;
+    double y_start = -0.015;
+    double y_end = std::numeric_limits<double>::quiet_NaN();
     std::string output_dir = "/fractals";
-    float zoom_step = 0.05f;
+    double zoom_step = 0.05;
     int pan_step = 10;
     bool showDeviceList = false;
     size_t platformId = 0;
@@ -125,13 +125,13 @@ void runKernel(
     cl::Program& program,
     cl::Image2D& image,
     cl::CommandQueue& queue,
-    const float x_start,
-    const float y_start,
-    const float pixel_step,
+    const double x_start,
+    const double y_start,
+    const double pixel_step,
     const unsigned int max_iter,
-    const float divergence_threshold,
-    const float xtra_1,
-    const float xtra_2,
+    const double divergence_threshold,
+    const double xtra_1,
+    const double xtra_2,
     const size_t n_cols, 
     const size_t n_rows
 )
@@ -238,10 +238,10 @@ void saveFractalImageAndConfig(const cv::Mat& fractalImage, const FractalParams&
     LOG_OUT("Saved: " + config_file_path.string());
 }
 
-void zoom(float& x_start, float& x_end, float& y_start, float& y_end, const float zoom)
+void zoom(double& x_start, double& x_end, double& y_start, double& y_end, const double zoom)
 {
-    auto x_mid = (x_start + x_end) / 2.0f;
-    auto y_mid = (y_start + y_end) / 2.0f;
+    auto x_mid = (x_start + x_end) / 2.0;
+    auto y_mid = (y_start + y_end) / 2.0;
 
     auto x_offset = x_mid - x_start;
     auto y_offset = y_mid - y_start;
@@ -249,20 +249,20 @@ void zoom(float& x_start, float& x_end, float& y_start, float& y_end, const floa
     x_start = x_mid - x_offset * (1 - zoom);
     x_end = x_mid + x_offset * (1 - zoom);
     y_start = y_mid - y_offset * (1 - zoom);
-    y_end = std::numeric_limits<float>::quiet_NaN();
+    y_end = std::numeric_limits<double>::quiet_NaN();
 }
 
-void panVertical(float& y_start, float& y_end, const float pixel_step, const int n_pixels)
+void panVertical(double& y_start, double& y_end, const double pixel_step, const int n_pixels)
 {
     y_start -= pixel_step * n_pixels;
-    y_end = std::numeric_limits<float>::quiet_NaN();
+    y_end = std::numeric_limits<double>::quiet_NaN();
 }
 
-void panHorizontal(float& x_start, float& x_end, float& y_end, const float pixel_step, const int n_pixels)
+void panHorizontal(double& x_start, double& x_end, double& y_end, const double pixel_step, const int n_pixels)
 {
     x_start -= pixel_step * n_pixels;
     x_end -= pixel_step * n_pixels;
-    y_end = std::numeric_limits<float>::quiet_NaN();
+    y_end = std::numeric_limits<double>::quiet_NaN();
 }
 
 void showHelpText()
@@ -294,7 +294,7 @@ void showHelpText()
     #define ARROW_KEY_RIGHT 65363  
 #endif
 
-int navigateFractalImage(cv::Mat& fractalImage, FractalParams& p, float& pixel_step)
+int navigateFractalImage(cv::Mat& fractalImage, FractalParams& p, double& pixel_step)
 {
     auto waitForKey = true;
     while (waitForKey)
