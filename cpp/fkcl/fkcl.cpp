@@ -88,7 +88,7 @@ int main(int argc, char** argv)
 #endif
 
         LOG_OUT("Building the kernel...");
-        std::string complexSource = readFile("complex.cl");
+        std::string complexSource = readFile("complex-dd.cl");
         std::string fullSource = complexSource + "\n" + kernels[p.type];
         cl::Program program(context, fullSource);
         EXEC_TIMED(cl_int err = buildKernel(program, device);)

@@ -6,8 +6,6 @@
 #define _KERNELS
 
 
-// TODO: "Better than double" precision for "infinite" zooming
-
 const char* kernelMandelbrot = R"CLC(
 __kernel void init_image(write_only image2d_t img, 
         double x_start, double y_start, double pixel_step, unsigned int max_iter,
@@ -22,18 +20,23 @@ __kernel void init_image(write_only image2d_t img,
     float ret = 0.0;
     unsigned int i = 0;
     bool keep_going = true;
-    cfloat z = (cfloat)(xtra_1, xtra_2);
-    cfloat c = (cfloat)(x, y);
+
+    dd_complex z = dd_complex_from_dd(dd_from_double(xtra_1), dd_from_double(xtra_2));
+    dd_complex c = dd_complex_from_dd(dd_from_double(x), dd_from_double(y));
+
+    double abs_z_val;
     while(keep_going)
     {
-        z = c_add(c_mul(z, z), c);
-        if( (i >= max_iter) || (c_abs(z) > divergence_threshold) )
+        z = dd_cadd(dd_cmul(z, z), c);
+        dd_real abs_z = dd_cabs(z);          
+        abs_z_val = abs_z.hi + abs_z.lo;
+        if( (i >= max_iter) || (abs_z_val > divergence_threshold) )
         {
             keep_going = false;
         }
         else i++;
     }
-    if(c_abs(z) > divergence_threshold)
+    if(abs_z_val > divergence_threshold)
     {
         ret = (float)(max_iter - i) / (float)max_iter;
     }
@@ -59,18 +62,23 @@ __kernel void init_image(write_only image2d_t img,
     float ret = 0.0;
     unsigned int i = 0;
     bool keep_going = true;
-    cfloat c = (cfloat)(xtra_1, xtra_2);
-    cfloat z = (cfloat)(x, y);
+
+    dd_complex c = dd_complex_from_dd(dd_from_double(xtra_1), dd_from_double(xtra_2));
+    dd_complex z = dd_complex_from_dd(dd_from_double(x), dd_from_double(y));
+
+    double abs_z_val;
     while(keep_going)
     {
-        z = c_add(c_mul(z, z), c);
-        if( (i >= max_iter) || (c_abs(z) > divergence_threshold) )
+        z = dd_cadd(dd_cmul(z, z), c);
+        dd_real abs_z = dd_cabs(z);          
+        abs_z_val = abs_z.hi + abs_z.lo;
+        if( (i >= max_iter) || (abs_z_val > divergence_threshold) )
         {
             keep_going = false;
         }
         else i++;
     }
-    if(c_abs(z) > divergence_threshold)
+    if(abs_z_val > divergence_threshold)
     {
         ret = (float)(max_iter - i) / (float)max_iter;
     }
