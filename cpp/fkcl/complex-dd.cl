@@ -16,9 +16,6 @@ typedef struct {
 } dd_real;
 
 
-
-#define FMA(a,b,c) fma(a,b,c)
-
 // double-double essentials
 
 inline dd_real dd_from_double(double a) {
@@ -71,7 +68,6 @@ inline dd_real dd_mul(dd_real x, dd_real y) {
     return res;
 }
 
-
 inline dd_real dd_div(dd_real a, dd_real b) {
     // Step 1: approximate division using high parts only
     double q1 = a.hi / b.hi;
@@ -90,7 +86,6 @@ inline dd_real dd_div(dd_real a, dd_real b) {
 
     return res;
 }
-
 
 inline dd_real dd_sqrt(dd_real a) {
     // Approximate sqrt for dd_real using one Newton refinement

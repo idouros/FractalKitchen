@@ -265,11 +265,30 @@ void panHorizontal(double& x_start, double& x_end, double& y_end, const double p
     y_end = std::numeric_limits<double>::quiet_NaN();
 }
 
+void adjustMaxIter(FractalParams& p, const bool& upwards = true)
+{
+    const auto f = upwards ? 1.0 : -1.0;
+    auto before = p.max_iter;
+    auto after = (unsigned int)(p.max_iter * (1.0 + f * p.zoom_step / 2.0));
+    if (after == before) 
+    {
+        p.max_iter++;
+    }
+    else
+    {
+        p.max_iter = after;
+    }
+    p.y_end = std::numeric_limits<double>::quiet_NaN();
+}
+
+
 void showHelpText()
 {
     std::cout << "-----------------------------------------------------------------" << std::endl;
     std::cout << "\t+\tZoom in" << std::endl;
     std::cout << "\t-\tZoom out" << std::endl;
+    std::cout << "\t<\tDecrease maximum iterations limit" << std::endl;
+    std::cout << "\t>\tIncrease maximum iterations limit" << std::endl;
     std::cout << "\t(arrows)\t Pan the image up/down - left/right" << std::endl;
     std::cout << "\tS\tSave the current image and the config parameters" << std::endl;
     std::cout << "\tH\tDisplay this help text" << std::endl;
@@ -318,10 +337,22 @@ int navigateFractalImage(cv::Mat& fractalImage, FractalParams& p, double& pixel_
                 break;
             case '+':
                 zoom(p.x_start, p.x_end, p.y_start, p.y_end, p.zoom_step);
+                adjustMaxIter(p);
                 waitForKey = false;
                 break;
             case '-':
                 zoom(p.x_start, p.x_end, p.y_start, p.y_end, -p.zoom_step);
+                adjustMaxIter(p, false);
+                waitForKey = false;
+                break;
+            case '<':
+            case ',':
+                adjustMaxIter(p, false);
+                waitForKey = false;
+                break;
+            case '>':
+            case '.':
+                adjustMaxIter(p); 
                 waitForKey = false;
                 break;
             default:
