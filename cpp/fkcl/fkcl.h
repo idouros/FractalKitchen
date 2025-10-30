@@ -171,8 +171,8 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
         for (auto i = 0; i < n_rows; i++)
         {
             auto val = hostData[i * n_cols + j];
-            auto h = static_cast<int>(std::lround(val * 179.0f)) + 180;
-            auto s = 127;
+            auto h = 255 - static_cast<int>(std::lround(val * 179.0f));
+            auto s = 191;
             auto v = isAlmostEqual(val, 0.0f) ? 0 : 255;
             fractalImageHSV.at<cv::Vec3b>(i, j) = cv::Vec3b(h, s, v);
         } 
@@ -285,14 +285,14 @@ void adjustMaxIter(FractalParams& p, const bool& upwards = true)
 void showHelpText()
 {
     std::cout << "-----------------------------------------------------------------" << std::endl;
-    std::cout << "\t+\tZoom in" << std::endl;
-    std::cout << "\t-\tZoom out" << std::endl;
-    std::cout << "\t<\tDecrease maximum iterations limit" << std::endl;
-    std::cout << "\t>\tIncrease maximum iterations limit" << std::endl;
-    std::cout << "\t(arrows)\t Pan the image up/down - left/right" << std::endl;
-    std::cout << "\tS\tSave the current image and the config parameters" << std::endl;
-    std::cout << "\tH\tDisplay this help text" << std::endl;
-    std::cout << "\tQ\tQuit" << std::endl;
+    std::cout << "\t+\t\tZoom in" << std::endl;
+    std::cout << "\t-\t\tZoom out" << std::endl;
+    std::cout << "\t<\t\tDecrease maximum iterations limit" << std::endl;
+    std::cout << "\t>\t\tIncrease maximum iterations limit" << std::endl;
+    std::cout << "\t(arrows)\tPan the image up/down - left/right" << std::endl;
+    std::cout << "\tS\t\tSave the current image and the config parameters" << std::endl;
+    std::cout << "\tH\t\tDisplay this help text" << std::endl;
+    std::cout << "\tQ\t\tQuit" << std::endl;
     std::cout << "-----------------------------------------------------------------" << std::endl;
 }
 
@@ -337,12 +337,10 @@ int navigateFractalImage(cv::Mat& fractalImage, FractalParams& p, double& pixel_
                 break;
             case '+':
                 zoom(p.x_start, p.x_end, p.y_start, p.y_end, p.zoom_step);
-                adjustMaxIter(p);
                 waitForKey = false;
                 break;
             case '-':
                 zoom(p.x_start, p.x_end, p.y_start, p.y_end, -p.zoom_step);
-                adjustMaxIter(p, false);
                 waitForKey = false;
                 break;
             case '<':
