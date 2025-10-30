@@ -27,7 +27,16 @@ int main(int argc, char** argv)
 
     LOG_OUT("Reading config file...");
     ConfigParams configParams;
-    boost::property_tree::ini_parser::read_ini(argv[1], configParams); // TODO: Handle invalid/absent file
+    try
+    {
+        boost::property_tree::ini_parser::read_ini(argv[1], configParams);
+    }
+    catch (const std::runtime_error& e) 
+    {
+        LOG_OUT(std::string("Exception caught: ") + e.what());
+        LOG_OUT("Exiting...");
+        return -1;
+    }
     FractalParams p;
     p.type = configParams.get("fractal.type", DEFAULT_PARAMS.type);
     p.max_iter = configParams.get<unsigned int>("fractal.max_iter", DEFAULT_PARAMS.max_iter);
