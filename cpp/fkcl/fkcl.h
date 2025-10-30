@@ -281,6 +281,17 @@ void adjustMaxIter(FractalParams& p, const bool& upwards = true)
     p.y_end = std::numeric_limits<double>::quiet_NaN();
 }
 
+void adjustDivergenceThreshold(FractalParams& p, const bool& upwards = true)
+{
+    const auto f = upwards ? 1.0 : -1.0;
+    auto before = p.divergence_threshold;
+    auto after = p.divergence_threshold + (f * 0.05);
+    if (after >= 0.0)
+    {
+        p.divergence_threshold = after;
+    }
+    p.y_end = std::numeric_limits<double>::quiet_NaN();
+}
 
 void showHelpText()
 {
@@ -289,6 +300,8 @@ void showHelpText()
     std::cout << "\t-\t\tZoom out" << std::endl;
     std::cout << "\t<\t\tDecrease maximum iterations limit" << std::endl;
     std::cout << "\t>\t\tIncrease maximum iterations limit" << std::endl;
+    std::cout << "\t[\t\tDecrease divergence threshold" << std::endl;
+    std::cout << "\t]\t\tIncrease divergence threshold" << std::endl;
     std::cout << "\t(arrows)\tPan the image up/down - left/right" << std::endl;
     std::cout << "\tS\t\tSave the current image and the config parameters" << std::endl;
     std::cout << "\tH\t\tDisplay this help text" << std::endl;
@@ -353,7 +366,16 @@ int navigateFractalImage(cv::Mat& fractalImage, FractalParams& p, double& pixel_
                 adjustMaxIter(p); 
                 waitForKey = false;
                 break;
-            default:
+            case '[':
+            case '{':
+                adjustDivergenceThreshold(p, false);
+                waitForKey = false;
+                break;
+            case ']':
+            case '}':
+                adjustDivergenceThreshold(p);
+                waitForKey = false;
+            break;            default:
                 continue;
             }
         }
