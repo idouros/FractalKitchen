@@ -115,9 +115,8 @@ int main(int argc, char** argv)
         LOG_OUT("Generating fractal image...");
         std::vector<float> hostData = readBackImageData(p.n_cols, p.n_rows, queue, image);
         cv::Mat fractalImage = generateFractalImage(p.n_rows, p.n_cols, hostData);
-        cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE);
-        imshow("Display window", fractalImage);
-        // TODO: Quit if user closes window.
+        cv::namedWindow(IMAGE_WINDOW, cv::WINDOW_AUTOSIZE);
+        imshow(IMAGE_WINDOW, fractalImage);
 
         LOG_OUT("Image generation complete!");
         auto retVal = navigateFractalImage(fractalImage, p, pixel_step);

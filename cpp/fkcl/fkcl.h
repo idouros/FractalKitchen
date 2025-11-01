@@ -314,6 +314,8 @@ void showHelpText()
 #define NAVIGATION_END      0
 #define NAVIGATION_REPEAT   1
 
+#define IMAGE_WINDOW "Fractal Kitchen"
+
 #ifdef _WIN32
     #define ARROW_KEY_UP    2490368
     #define ARROW_KEY_DOWN  2621440    
@@ -331,6 +333,12 @@ int navigateFractalImage(cv::Mat& fractalImage, FractalParams& p, double& pixel_
     auto waitForKey = true;
     while (waitForKey)
     {
+        double prop = cv::getWindowProperty(IMAGE_WINDOW, cv::WND_PROP_VISIBLE);
+        if (prop < 1) {
+            LOG_OUT("Window closed by User. Exiting...");
+            return NAVIGATION_END;
+        }
+
         LOG_OUT("Press a key (H for help) > ");
         auto key = cv::waitKeyEx(0);
         if (key >= 0 && key <= 255)
@@ -375,7 +383,8 @@ int navigateFractalImage(cv::Mat& fractalImage, FractalParams& p, double& pixel_
             case '}':
                 adjustDivergenceThreshold(p);
                 waitForKey = false;
-            break;            default:
+            break;            
+            default:
                 continue;
             }
         }
