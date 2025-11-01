@@ -162,7 +162,7 @@ std::vector<float> readBackImageData(const size_t n_cols, const size_t n_rows, c
     return hostData;
 }
 
-// --- Image Generation
+// Image Generation
 cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std::vector<float>& hostData)
 {
     cv::Mat fractalImageHSV((int)n_rows, (int)n_cols, CV_8UC3);
@@ -187,6 +187,25 @@ std::string formatTimestamp(std::time_t t)
     auto now = std::chrono::system_clock::now();
     return std::format("{:%Y%m%d_%H%M%S}", now);
 }
+
+// Image navigation
+
+#define NAVIGATION_END      0
+#define NAVIGATION_REPEAT   1
+
+#define IMAGE_WINDOW "Fractal Kitchen"
+
+#ifdef _WIN32
+#define ARROW_KEY_UP    2490368
+#define ARROW_KEY_DOWN  2621440    
+#define ARROW_KEY_LEFT  2424832    
+#define ARROW_KEY_RIGHT 2555904   
+#elif __linux__
+#define ARROW_KEY_UP    65362
+#define ARROW_KEY_DOWN  65364  
+#define ARROW_KEY_LEFT  65361  
+#define ARROW_KEY_RIGHT 65363  
+#endif
 
 void saveFractalImageAndConfig(const cv::Mat& fractalImage, const FractalParams& p)
 {
@@ -308,25 +327,6 @@ void showHelpText()
     std::cout << "\tQ\t\tQuit" << std::endl;
     std::cout << "-----------------------------------------------------------------" << std::endl;
 }
-
-// Image navigation
-
-#define NAVIGATION_END      0
-#define NAVIGATION_REPEAT   1
-
-#define IMAGE_WINDOW "Fractal Kitchen"
-
-#ifdef _WIN32
-    #define ARROW_KEY_UP    2490368
-    #define ARROW_KEY_DOWN  2621440    
-    #define ARROW_KEY_LEFT  2424832    
-    #define ARROW_KEY_RIGHT 2555904   
-#elif __linux__
-    #define ARROW_KEY_UP    65362
-    #define ARROW_KEY_DOWN  65364  
-    #define ARROW_KEY_LEFT  65361  
-    #define ARROW_KEY_RIGHT 65363  
-#endif
 
 int navigateFractalImage(cv::Mat& fractalImage, FractalParams& p, double& pixel_step)
 {
