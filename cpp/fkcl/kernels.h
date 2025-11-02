@@ -38,7 +38,13 @@ __kernel void init_image(write_only image2d_t img,
     }
     if(abs_z_val > divergence_threshold)
     {
-        ret = (float)(max_iter - i) / (float)max_iter;
+        ret = i;
+        if (i < max_iter) 
+        {
+            double log_zn = log(abs_z_val);
+            double nu = log(log_zn / log(2.0)) / log(2.0);
+            ret = (i + 1 - nu) / max_iter;
+        }
     }
 
     // float4 is required for image writes
