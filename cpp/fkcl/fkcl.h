@@ -190,8 +190,10 @@ std::string formatTimestamp(std::time_t t)
 
 // Image navigation
 
+#define NAVIGATION_ERROR    -1
 #define NAVIGATION_END      0
-#define NAVIGATION_REPEAT   1
+#define NAVIGATION_RECALC   1
+#define NAVIGATION_REDRAW   2
 
 #define IMAGE_WINDOW "Fractal Kitchen"
 
@@ -328,6 +330,17 @@ void showHelpText()
     std::cout << "-----------------------------------------------------------------" << std::endl;
 }
 
+void cycleHue(cv::Mat& fractalImage, const int& step = 1)
+{
+    for (int j = 0; j < fractalImage.cols; j++)
+    {
+        for (int i = 0; i < fractalImage.rows; i++)
+        {
+            fractalImage.at<cv::Vec3b>(i, j)[0] = (fractalImage.at<cv::Vec3b>(i, j)[0] + step) % 255;
+        }
+    }
+}
+
 int navigateFractalImage(cv::Mat& fractalImage, FractalParams& p, double& pixel_step)
 {
     auto waitForKey = true;
@@ -383,7 +396,10 @@ int navigateFractalImage(cv::Mat& fractalImage, FractalParams& p, double& pixel_
             case '}':
                 adjustDivergenceThreshold(p);
                 waitForKey = false;
-            break;            
+                break;    
+            case 'c':
+                cycleHue(fractalImage, 8);
+                return NAVIGATION_REDRAW;
             default:
                 continue;
             }
@@ -413,6 +429,6 @@ int navigateFractalImage(cv::Mat& fractalImage, FractalParams& p, double& pixel_
             }
         }
     }
-    return NAVIGATION_REPEAT;
+    return NAVIGATION_RECALC;
 }
 

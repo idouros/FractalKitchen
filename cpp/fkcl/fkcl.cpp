@@ -58,71 +58,94 @@ int main(int argc, char** argv)
     p.deviceId = configParams.get<size_t>("device.deviceId", DEFAULT_PARAMS.deviceId);
     p.showDeviceList = configParams.get<bool>("device.showDeviceList", DEFAULT_PARAMS.showDeviceList);
  
-
+    bool calcFractal = true;
+    cv::Mat fractalImage;
+    double pixel_step = -1.0;
     while(true)
     {
-        LOG_OUT("Initializing essential parameters...");
-        cl::ImageFormat format(CL_R, CL_FLOAT);
-        double pixel_step = -1.0;
-        if (!std::isnan(p.x_end) && std::isnan(p.y_end))
+        if (calcFractal)
         {
-            pixel_step = (p.x_end - p.x_start) / (double)p.n_cols;
-            p.y_end = p.y_start + pixel_step * p.n_rows;
+            LOG_OUT("Initializing essential parameters...");
+            cl::ImageFormat format(CL_R, CL_FLOAT);
+
+            if (!std::isnan(p.x_end) && std::isnan(p.y_end))
+            {
+                pixel_step = (p.x_end - p.x_start) / (double)p.n_cols;
+                p.y_end = p.y_start + pixel_step * p.n_rows;
+            }
+            else if (!std::isnan(p.y_end) && std::isnan(p.x_end))
+            {
+                pixel_step = (p.y_end - p.y_start) / (double)p.n_rows;
+                p.x_end = p.x_start + pixel_step * p.n_cols;
+            }
+            else
+            {
+                std::cout << "Invalid arguments! Exactly one of x_end, y_end must be defined. Exiting..." << std::endl;
+                return -1;
+            }
+
+            if (p.showDeviceList)
+            {
+                LOG_OUT("Reading platforms and devices...");
+                listDevices();
+            }
+
+            LOG_OUT("Getting the device...");
+            cl::Device device = getDevice(p.platformId, p.deviceId);
+            cl::Context context(device);
+            cl::CommandQueue queue(context, device);
+#ifdef cl_khr_fp64
+            LOG_OUT("Double precision supported!");
+#else
+            LOG_OUT("Double precision NOT supported! - single precision will be used.");
+#endif
+
+            LOG_OUT("Building the kernel...");
+            std::string complexSource = readFile("complex-dd.cl");
+            std::string fullSource = complexSource + "\n" + kernels[p.type];
+            cl::Program program(context, fullSource);
+            EXEC_TIMED(cl_int err = buildKernel(program, device);)
+
+                LOG_OUT("Running the kernel...");
+            cl::Image2D image(context, CL_MEM_WRITE_ONLY, format, p.n_cols, p.n_rows);
+            LOG_OUT("\t  Generating fractal of type: " + p.type);
+            LOG_OUT("\tMaximum number of iterations: " + std::to_string(p.max_iter));
+            LOG_OUT("\t        Divergence threshold: " + std::to_string(p.divergence_threshold));
+            LOG_OUT("\t           Extra parameter 1: " + p.xtra_1_label + ": " + std::to_string(p.xtra_1));
+            LOG_OUT("\t           Extra parameter 2: " + p.xtra_2_label + ": " + std::to_string(p.xtra_2));
+            EXEC_TIMED(runKernel(program, image, queue, p.x_start, p.y_start, pixel_step, p.max_iter,
+                p.divergence_threshold, p.xtra_1, p.xtra_2, p.n_cols, p.n_rows);)
+
+                LOG_OUT("Generating fractal image...");
+            std::vector<float> hostData = readBackImageData(p.n_cols, p.n_rows, queue, image);
+            fractalImage = generateFractalImage(p.n_rows, p.n_cols, hostData);
+            LOG_OUT("Image generation complete!");
+            cv::namedWindow(IMAGE_WINDOW, cv::WINDOW_AUTOSIZE);
         }
-        else if (!std::isnan(p.y_end) && std::isnan(p.x_end))
+
+        imshow(IMAGE_WINDOW, fractalImage);
+        auto retVal = navigateFractalImage(fractalImage, p, pixel_step);
+        if (retVal < 0)
         {
-            pixel_step = (p.y_end - p.y_start) / (double)p.n_rows;
-            p.x_end = p.x_start + pixel_step * p.n_cols;
+            LOG_OUT("Navigation error. Exiting");
+            return retVal;
         }
         else
         {
-            std::cout << "Invalid arguments! Exactly one of x_end, y_end must be defined. Exiting..." << std::endl;
-            return -1;
-        }
-
-        if (p.showDeviceList)
-        {
-            LOG_OUT("Reading platforms and devices...");
-            listDevices();
-        }
-
-        LOG_OUT("Getting the device...");
-        cl::Device device = getDevice(p.platformId, p.deviceId);
-        cl::Context context(device);
-        cl::CommandQueue queue(context, device);
-#ifdef cl_khr_fp64
-        LOG_OUT("Double precision supported!");
-#else
-        LOG_OUT("Double precision NOT supported! - single precision will be used.");
-#endif
-
-        LOG_OUT("Building the kernel...");
-        std::string complexSource = readFile("complex-dd.cl");
-        std::string fullSource = complexSource + "\n" + kernels[p.type];
-        cl::Program program(context, fullSource);
-        EXEC_TIMED(cl_int err = buildKernel(program, device);)
-
-        LOG_OUT("Running the kernel...");
-        cl::Image2D image(context, CL_MEM_WRITE_ONLY, format, p.n_cols, p.n_rows);
-        LOG_OUT("\t  Generating fractal of type: " + p.type);
-        LOG_OUT("\tMaximum number of iterations: " + std::to_string(p.max_iter));
-        LOG_OUT("\t        Divergence threshold: " + std::to_string(p.divergence_threshold));
-        LOG_OUT("\t           Extra parameter 1: " + p.xtra_1_label + ": " + std::to_string(p.xtra_1));
-        LOG_OUT("\t           Extra parameter 2: " + p.xtra_2_label + ": " + std::to_string(p.xtra_2));
-        EXEC_TIMED(runKernel(program, image, queue, p.x_start, p.y_start, pixel_step, p.max_iter,
-            p.divergence_threshold, p.xtra_1, p.xtra_2, p.n_cols, p.n_rows);)
-
-        LOG_OUT("Generating fractal image...");
-        std::vector<float> hostData = readBackImageData(p.n_cols, p.n_rows, queue, image);
-        cv::Mat fractalImage = generateFractalImage(p.n_rows, p.n_cols, hostData);
-        cv::namedWindow(IMAGE_WINDOW, cv::WINDOW_AUTOSIZE);
-        imshow(IMAGE_WINDOW, fractalImage);
-
-        LOG_OUT("Image generation complete!");
-        auto retVal = navigateFractalImage(fractalImage, p, pixel_step);
-        if (retVal <= 0)
-        {
-            return retVal;
+            switch (retVal)
+            {
+            case NAVIGATION_RECALC:
+                calcFractal = true;
+                break;
+            case NAVIGATION_REDRAW:
+                calcFractal = false;
+                break;
+            case NAVIGATION_END:
+                return retVal;
+            default:
+                LOG_OUT("Invalid exit code in navigation loop. Exiting");
+                return retVal;
+            }
         }
     }
 }
