@@ -40,6 +40,5 @@
 # debug information files
 *.dwo
 
-# Visual Studio slop
-cpp/.vs/
+# all other compiler slop
 cpp/out/

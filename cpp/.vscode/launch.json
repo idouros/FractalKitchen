@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug fkcl",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/out/build/x64-debug/fkcl/fkcl.exe",
+      "args": ["${workspaceFolder}/configs/mandelbrot01.config"],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "externalTerminal"
+    },
+    {
+      "name": "Release fkcl",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/out/build/x64-release/fkcl/fkcl.exe",
+      "args": ["${workspaceFolder}/configs/mandelbrot01.config"],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "externalTerminal"
+    }
+  ]
+}
