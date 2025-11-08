@@ -1,5 +1,5 @@
 ﻿/*********************************************************
- * fkcl.cpp — FractalKitchen main entry point for app
+ * fkcl.cpp - FractalKitchen main entry point for app
  * Author: Yannis Douros
  *********************************************************/
 

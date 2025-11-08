@@ -13,6 +13,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include "helpers.h"
+#include "colouring.h"
 
 typedef boost::property_tree::ptree ConfigParams;
 
@@ -163,26 +164,47 @@ std::vector<float> readBackImageData(const size_t n_cols, const size_t n_rows, c
 }
 
 // Image Generation
-cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std::vector<float>& hostData)
+cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std::vector<float>& hostData, 
+    const ColourMode& colourMode = COLOUR_MODE_HSV)
 {
-    cv::Mat fractalImageHSV((int)n_rows, (int)n_cols, CV_8UC3);
+    const float hueCycles = 3.0f; // number of hue cycles
+    cv::Mat fractalImageBGR((int)n_rows, (int)n_cols, CV_8UC3);
+    cv::Mat fractalImageHSV;
+
+    if(colourMode == COLOUR_MODE_HSV)
+    {
+        fractalImageHSV = cv::Mat((int)n_rows, (int)n_cols, CV_8UC3);
+    }
+
     for (auto j = 0; j < n_cols; j++)
     {
         for (auto i = 0; i < n_rows; i++)
         {
             auto val = hostData[i * n_cols + j];
-            auto h = 255 - static_cast<int>(std::lround(val * 179.0f));
-            auto s = 191;
-            auto v = isAlmostEqual(val, 0.0f) ? 0 : 255;
-            fractalImageHSV.at<cv::Vec3b>(i, j) = cv::Vec3b(h, s, v);
+            switch(colourMode)
+            {
+                case COLOUR_MODE_HSV:
+                {
+                    fractalImageHSV.at<cv::Vec3b>(i, j) = smoothHSV(val);
+                    break;
+                }
+                case COLOUR_MODE_BBCW:
+                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothBBCW(val);
+                default:
+                    // TODO - graceful
+                    break;
+            }
         } 
     }
-    cv::Mat fractalImageBGR;
-    cv::cvtColor(fractalImageHSV, fractalImageBGR, cv::COLOR_HSV2BGR);
+
+    if(colourMode == COLOUR_MODE_HSV)
+    {
+        cv::cvtColor(fractalImageHSV, fractalImageBGR, cv::COLOR_HSV2BGR);
+    }
     return fractalImageBGR;
 }
 
-std::string formatTimestamp(std::time_t t) 
+inline std::string formatTimestamp(std::time_t t) 
 {
     auto now = std::chrono::system_clock::now();
     return std::format("{:%Y%m%d_%H%M%S}", now);
@@ -190,6 +212,7 @@ std::string formatTimestamp(std::time_t t)
 
 // Image navigation
 
+// TODO make this an enum
 #define NAVIGATION_ERROR    -1
 #define NAVIGATION_END      0
 #define NAVIGATION_RECALC   1
@@ -259,7 +282,7 @@ void saveFractalImageAndConfig(const cv::Mat& fractalImage, const FractalParams&
     LOG_OUT("Saved: " + config_file_path.string());
 }
 
-void zoom(double& x_start, double& x_end, double& y_start, double& y_end, const double zoom)
+inline void zoom(double& x_start, double& x_end, double& y_start, double& y_end, const double zoom)
 {
     auto x_mid = (x_start + x_end) / 2.0;
     auto y_mid = (y_start + y_end) / 2.0;
@@ -273,20 +296,20 @@ void zoom(double& x_start, double& x_end, double& y_start, double& y_end, const 
     y_end = std::numeric_limits<double>::quiet_NaN();
 }
 
-void panVertical(double& y_start, double& y_end, const double pixel_step, const int n_pixels)
+inline void panVertical(double& y_start, double& y_end, const double pixel_step, const int n_pixels)
 {
     y_start -= pixel_step * n_pixels;
     y_end = std::numeric_limits<double>::quiet_NaN();
 }
 
-void panHorizontal(double& x_start, double& x_end, double& y_end, const double pixel_step, const int n_pixels)
+inline void panHorizontal(double& x_start, double& x_end, double& y_end, const double pixel_step, const int n_pixels)
 {
     x_start -= pixel_step * n_pixels;
     x_end -= pixel_step * n_pixels;
     y_end = std::numeric_limits<double>::quiet_NaN();
 }
 
-void adjustMaxIter(FractalParams& p, const bool& upwards = true)
+inline void adjustMaxIter(FractalParams& p, const bool& upwards = true)
 {
     const auto f = upwards ? 1.0 : -1.0;
     auto before = p.max_iter;
@@ -302,7 +325,7 @@ void adjustMaxIter(FractalParams& p, const bool& upwards = true)
     p.y_end = std::numeric_limits<double>::quiet_NaN();
 }
 
-void adjustDivergenceThreshold(FractalParams& p, const bool& upwards = true)
+inline void adjustDivergenceThreshold(FractalParams& p, const bool& upwards = true)
 {
     const auto f = upwards ? 1.0 : -1.0;
     auto before = p.divergence_threshold;
@@ -314,7 +337,7 @@ void adjustDivergenceThreshold(FractalParams& p, const bool& upwards = true)
     p.y_end = std::numeric_limits<double>::quiet_NaN();
 }
 
-void showHelpText()
+inline void showHelpText()
 {
     std::cout << "-----------------------------------------------------------------" << std::endl;
     std::cout << "\t+\t\tZoom in" << std::endl;
