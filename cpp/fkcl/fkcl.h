@@ -165,7 +165,7 @@ std::vector<float> readBackImageData(const size_t n_cols, const size_t n_rows, c
 
 // Image Generation
 cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std::vector<float>& hostData, 
-    const ColourMode& colourMode = COLOUR_MODE_HSV)
+    const ColourMode& colourMode = COLOUR_MODE_FLAME)
 {
     const float hueCycles = 3.0f; // number of hue cycles
     cv::Mat fractalImageBGR((int)n_rows, (int)n_cols, CV_8UC3);
@@ -190,6 +190,8 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
                 }
                 case COLOUR_MODE_BBCW:
                     fractalImageBGR.at<cv::Vec3b>(i, j) = smoothBBCW(val);
+                case COLOUR_MODE_FLAME:
+                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothFlame(val);
                 default:
                     // TODO - graceful
                     break;

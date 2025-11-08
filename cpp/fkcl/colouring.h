@@ -5,7 +5,8 @@
 enum ColourMode
 {
     COLOUR_MODE_HSV = 0,
-    COLOUR_MODE_BBCW
+    COLOUR_MODE_BBCW,
+    COLOUR_MODE_FLAME
 };
 
 inline uint8_t clamp255(double x)
@@ -21,45 +22,77 @@ inline double coslerp(double a, double b, double t)
     return a*(1-f) + b*f;
 }
 
+// TODO - range cycling on all palettes
+
+inline cv::Vec3b smoothFlame(double val)
+{
+    val = std::clamp(val, 0.0, 1.0);
+    cv::Vec3b colour; // B, G, R
+
+    if (val < 0.33)
+    {
+        // Black → Red
+        colour[0] = 0;                                       // B
+        colour[1] = 0;                                       // G
+        colour[2] = static_cast<uint8_t>(val / 0.33 * 255.0);  // R
+    }
+    else if (val < 0.66)
+    {
+        // Red → Orange → Yellow
+        double t = (val - 0.33) / 0.33;
+        colour[0] = 0;                                       // B
+        colour[1] = static_cast<uint8_t>(t * 255.0);           // G
+        colour[2] = 255;                                     // R
+    }
+    else
+    {
+        // Yellow → White
+        double t = (val - 0.66) / 0.34;
+        colour[0] = static_cast<uint8_t>(t * 255.0);           // B
+        colour[1] = 255;                                     // G
+        colour[2] = 255;                                     // R
+    }
+    return colour;
+}
+
 // Smooth Black → Blue → Cyan → White
 inline cv::Vec3b smoothBBCW(double val)
 {
     val = std::clamp(val, 0.0, 1.0);
-    cv::Vec3b color; // B, G, R
+    cv::Vec3b colour; // B, G, R
 
     if (val < 0.33)
     {
         // Black → Blue
         double t = val / 0.33;
-        color[0] = clamp255(coslerp(0, 255, t));    // B
-        color[1] = 0;                               // G
-        color[2] = 0;                               // R
+        colour[0] = clamp255(coslerp(0, 255, t));    // B
+        colour[1] = 0;                               // G
+        colour[2] = 0;                               // R
     }
     else if (val < 0.66)
     {
         // Blue → Cyan
         double t = (val - 0.33) / 0.33;
-        color[0] = 255;                             // B
-        color[1] = clamp255(coslerp(0, 255, t));    // G
-        color[2] = 0;                               // R
+        colour[0] = 255;                             // B
+        colour[1] = clamp255(coslerp(0, 255, t));    // G
+        colour[2] = 0;                               // R
     }
     else
     {
         // Cyan → White
         double t = (val - 0.66) / 0.34;
-        color[0] = 255;                             // B
-        color[1] = 255;                             // G
-        color[2] = clamp255(coslerp(0, 255, t));    // R
+        colour[0] = 255;                             // B
+        colour[1] = 255;                             // G
+        colour[2] = clamp255(coslerp(0, 255, t));    // R
     }
-
-    return color;
+    return colour;
 }
 
 inline cv::Vec3b smoothHSV(double val, double hueCycles = 1.0)
 {
-    cv::Vec3b color; // H, S, V
-    color[0] = static_cast<int>(std::fmod(val * hueCycles * 179.0f, 179.0f)); // H
-    color[1] = static_cast<int>(200 + 55 * std::sqrt(val)); // 200–255        // S
-    color[2] = static_cast<int>(std::lround(255.0f * std::pow(val, 0.3f)));   // V
-    return color; 
+    cv::Vec3b colour; // H, S, V
+    colour[0] = static_cast<int>(std::fmod(val * hueCycles * 179.0f, 179.0f)); // H
+    colour[1] = static_cast<int>(200 + 55 * std::sqrt(val)); // 200–255        // S
+    colour[2] = static_cast<int>(std::lround(255.0f * std::pow(val, 0.3f)));   // V
+    return colour; 
 }
