@@ -1,5 +1,5 @@
 /*********************************************************
- * kernels.h — OpenCL kernels for fractal generation
+ * kernels.h - OpenCL kernels for fractal generation
  * Author: Yannis Douros
  *********************************************************/
 #ifndef _KERNELS
