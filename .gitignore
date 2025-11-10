@@ -41,4 +41,5 @@
 *.dwo
 
 # all other compiler slop
+.vs/
 cpp/build/

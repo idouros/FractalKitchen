@@ -167,7 +167,7 @@ std::vector<float> readBackImageData(const size_t n_cols, const size_t n_rows, c
 cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std::vector<float>& hostData, 
     const ColourMode& colourMode = COLOUR_MODE_FLAME)
 {
-    const float hueCycles = 3.0f; // number of hue cycles
+    const float colourCycles = 5.0f; 
     cv::Mat fractalImageBGR((int)n_rows, (int)n_cols, CV_8UC3);
     cv::Mat fractalImageHSV;
 
@@ -185,16 +185,18 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
             {
                 case COLOUR_MODE_HSV:
                 {
-                    fractalImageHSV.at<cv::Vec3b>(i, j) = smoothHSV(val);
+                    fractalImageHSV.at<cv::Vec3b>(i, j) = smoothHSV(val, colourCycles);
                     break;
                 }
                 case COLOUR_MODE_BBCW:
-                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothBBCW(val);
-                case COLOUR_MODE_FLAME:
-                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothFlame(val);
-                default:
-                    // TODO - graceful
+                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothBBCW(val, colourCycles);
                     break;
+                case COLOUR_MODE_FLAME:
+                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothFlame(val, colourCycles);
+                    break;
+                default:
+                    LOG_OUT("Invalid Colour Mode! Exiting...")
+                    exit(-1);
             }
         } 
     }
@@ -214,7 +216,6 @@ inline std::string formatTimestamp(std::time_t t)
 
 // Image navigation
 
-// TODO make this an enum
 #define NAVIGATION_ERROR    -1
 #define NAVIGATION_END      0
 #define NAVIGATION_RECALC   1
