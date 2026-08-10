@@ -32,18 +32,21 @@ inline cv::Vec3b smoothFlame(const double val0, const double cycles = 1.0)
     auto val = std::clamp(val0, 0.0, 1.0);
     val = std::fmod(val * cycles, 1.0);
     cv::Vec3b colour; // B, G, R
+    double gamma = 0.5;
+    double t;
 
     if (val < 0.33)
     {
         // Black → Red
+        auto t = std::pow(val / 0.33, gamma);
         colour[0] = 0;                                       // B
         colour[1] = 0;                                       // G
-        colour[2] = static_cast<uint8_t>(val / 0.33 * 255.0);  // R
+        colour[2] = static_cast<uint8_t>(t / 0.33 * 255.0);  // R
     }
     else if (val < 0.66)
     {
         // Red → Orange → Yellow
-        double t = (val - 0.33) / 0.33;
+        t = std::pow((val - 0.33) / 0.33, gamma);
         colour[0] = 0;                                       // B
         colour[1] = static_cast<uint8_t>(t * 255.0);           // G
         colour[2] = 255;                                     // R
@@ -51,7 +54,7 @@ inline cv::Vec3b smoothFlame(const double val0, const double cycles = 1.0)
     else
     {
         // Yellow → White
-        double t = (val - 0.66) / 0.34;
+        t = std::pow((val - 0.66) / 0.34, gamma);
         colour[0] = static_cast<uint8_t>(t * 255.0);           // B
         colour[1] = 255;                                     // G
         colour[2] = 255;                                     // R
@@ -92,6 +95,9 @@ inline cv::Vec3b smoothBBCW(const double val0, const double cycles = 1.0)
     }
     return colour;
 }
+
+// TO DO: Introduce histogram colouring
+
 
 inline cv::Vec3b smoothHSV(const double val, const double cycles = 1.0)
 {

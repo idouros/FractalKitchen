@@ -165,9 +165,9 @@ std::vector<float> readBackImageData(const size_t n_cols, const size_t n_rows, c
 
 // Image Generation
 cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std::vector<float>& hostData, 
-    const ColourMode& colourMode = COLOUR_MODE_FLAME)
+    const ColourMode& colourMode = COLOUR_MODE_BBCW)
 {
-    const float colourCycles = 5.0f; 
+    const float colourCycles = 1.0f; // TODO: make this user-configurable
     cv::Mat fractalImageBGR((int)n_rows, (int)n_cols, CV_8UC3);
     cv::Mat fractalImageHSV;
 

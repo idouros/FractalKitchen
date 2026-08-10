@@ -17,7 +17,7 @@ __kernel void init_image(write_only image2d_t img,
     double y = y_start + (double)row * pixel_step;
     double x = x_start + (double)col * pixel_step;
 
-    float ret = 0.0;
+    float ret = 0.0f;
     unsigned int i = 0;
     bool keep_going = true;
 

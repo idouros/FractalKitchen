@@ -107,7 +107,7 @@ int main(int argc, char** argv)
             cl::Program program(context, fullSource);
             EXEC_TIMED(cl_int err = buildKernel(program, device);)
 
-                LOG_OUT("Running the kernel...");
+            LOG_OUT("Running the kernel...");
             cl::Image2D image(context, CL_MEM_WRITE_ONLY, format, p.n_cols, p.n_rows);
             LOG_OUT("\t  Generating fractal of type: " + p.type);
             LOG_OUT("\tMaximum number of iterations: " + std::to_string(p.max_iter));
