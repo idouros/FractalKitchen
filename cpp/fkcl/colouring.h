@@ -48,7 +48,7 @@ inline cv::Vec3b smoothFlame(const double val0, const double cycles = 1.0)
         // Red → Orange → Yellow
         t = std::pow((val - 0.33) / 0.33, gamma);
         colour[0] = 0;                                       // B
-        colour[1] = static_cast<uint8_t>(t * 255.0);           // G
+        colour[1] = static_cast<uint8_t>(t * 255.0);         // G
         colour[2] = 255;                                     // R
     }
     else
@@ -62,10 +62,34 @@ inline cv::Vec3b smoothFlame(const double val0, const double cycles = 1.0)
     return colour;
 }
 
-// Smooth Black → Blue → Cyan → White
-inline cv::Vec3b smoothBBCW(const double val0, const double cycles = 1.0)
+// Smooth Black → Blue → Cyan → White*
+inline cv::Vec3b smoothBBCW(const double val0, const double cycles = 1.0, std::vector<size_t>* cumulativeHistogram = nullptr)
 {
     auto val = std::clamp(val0, 0.0, 1.0);
+ 
+ 
+     // Mandelbrot interior
+    if (val <= 0.0)
+        return cv::Vec3b(0, 0, 0);
+
+    // Optional histogram/CDF remapping
+    if (cumulativeHistogram != nullptr &&
+        !cumulativeHistogram->empty() &&
+        cumulativeHistogram->back() > 0)
+    {
+        const size_t numBins = cumulativeHistogram->size();
+
+        size_t bin = static_cast<size_t>(val * numBins);
+        bin = std::min(bin, numBins - 1);
+
+        val =
+            static_cast<double>((*cumulativeHistogram)[bin]) /
+            static_cast<double>(cumulativeHistogram->back());
+    }
+
+ 
+ 
+ 
     val = std::fmod(val * cycles, 1.0);
     cv::Vec3b colour; // B, G, R
 

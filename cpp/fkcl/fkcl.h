@@ -163,13 +163,56 @@ std::vector<float> readBackImageData(const size_t n_cols, const size_t n_rows, c
     return hostData;
 }
 
+
+
+
+
+std::vector<size_t> makeHistogram(const std::vector<float>& data, const size_t numBins = 1000)
+{
+    std::vector<size_t> histogram(numBins, 0);
+    for (const float val : data)
+    {
+        // Ignore Mandelbrot interior
+        if (val <= 0.0f)
+            continue;
+
+            // Convert [0, 1] to histogram bin [0, numBins - 1]
+        size_t bin = static_cast<size_t>(val * numBins);
+
+        // val == 1.0 would otherwise give bin == numBins
+        bin = std::min(bin, numBins - 1);
+
+        ++histogram[bin];
+    }
+    return histogram;
+}
+
+
+std::vector<size_t> makeCumulativeHistogram(
+    const std::vector<size_t>& histogram)
+{
+    std::vector<size_t> cumulative(histogram.size());
+    if (histogram.empty())
+        return cumulative;
+    cumulative[0] = histogram[0];
+    for (size_t i = 1; i < histogram.size(); ++i)
+    {
+        cumulative[i] = cumulative[i - 1] + histogram[i];
+    }
+    return cumulative;
+}
+
+
 // Image Generation
 cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std::vector<float>& hostData, 
     const ColourMode& colourMode = COLOUR_MODE_BBCW)
 {
-    const float colourCycles = 1.0f; // TODO: make this user-configurable
+    const float colourCycles = 2.0f; // TODO: make this user-configurable
     cv::Mat fractalImageBGR((int)n_rows, (int)n_cols, CV_8UC3);
     cv::Mat fractalImageHSV;
+
+    auto histogram = makeHistogram(hostData);
+    auto cumulative = makeCumulativeHistogram(histogram);
 
     if(colourMode == COLOUR_MODE_HSV)
     {
@@ -189,7 +232,7 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
                     break;
                 }
                 case COLOUR_MODE_BBCW:
-                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothBBCW(val, colourCycles);
+                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothBBCW(val, colourCycles, &cumulative);
                     break;
                 case COLOUR_MODE_FLAME:
                     fractalImageBGR.at<cv::Vec3b>(i, j) = smoothFlame(val, colourCycles);
