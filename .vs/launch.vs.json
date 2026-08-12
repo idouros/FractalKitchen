@@ -1,0 +1,13 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "default",
+      "project": "cpp\\CMakeLists.txt",
+      "projectTarget": "fkcl.exe (fkcl\\fkcl.exe)",
+      "name": "fkcl.exe (fkcl\\fkcl.exe)",
+      "args": [ "${workspaceRoot}\\cpp\\configs\\mandelbrot01.config" ]
+    }
+  ]
+}

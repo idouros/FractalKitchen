@@ -41,5 +41,6 @@
 *.dwo
 
 # all other compiler slop
-.vs/
+.vs/*
+!.vs/launch.vs.json
 cpp/build/
