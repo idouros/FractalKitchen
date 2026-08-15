@@ -4,6 +4,16 @@ FractalKitchen is an experimental fractal renderer written in modern C++ and Ope
 
 The project uses Mandelbrot and Julia sets as a test bed for exploring GPU computation, numerical precision, interactive rendering and colouring techniques.
 
+## Example output
+
+### Mandelbrot set
+
+![Mandelbrot set rendered with FractalKitchen](images/mandelbrot.png)
+
+### Julia set
+
+![Julia set rendered with FractalKitchen](images/julia.png)
+
 ## Features
 
 - Mandelbrot and Julia set generation
