@@ -26,7 +26,6 @@ inline double coslerp(double a, double b, double t)
 }
 
 
-
 inline cv::Vec3b smoothFlame(const double val0, const double cycles = 1.0)
 {
     auto val = std::clamp(val0, 0.0, 1.0);
@@ -66,8 +65,7 @@ inline cv::Vec3b smoothFlame(const double val0, const double cycles = 1.0)
 inline cv::Vec3b smoothBBCW(const double val0, const double cycles = 1.0, std::vector<size_t>* cumulativeHistogram = nullptr)
 {
     auto val = std::clamp(val0, 0.0, 1.0);
- 
- 
+  
      // Mandelbrot interior
     if (val <= 0.0)
         return cv::Vec3b(0, 0, 0);
@@ -86,9 +84,7 @@ inline cv::Vec3b smoothBBCW(const double val0, const double cycles = 1.0, std::v
             static_cast<double>((*cumulativeHistogram)[bin]) /
             static_cast<double>(cumulativeHistogram->back());
     }
-
- 
- 
+    
  
     val = std::fmod(val * cycles, 1.0);
     cv::Vec3b colour; // B, G, R
@@ -119,8 +115,6 @@ inline cv::Vec3b smoothBBCW(const double val0, const double cycles = 1.0, std::v
     }
     return colour;
 }
-
-// TO DO: Introduce histogram colouring
 
 
 inline cv::Vec3b smoothHSV(const double val, const double cycles = 1.0)
