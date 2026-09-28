@@ -33,6 +33,7 @@ struct FractalParams {
     double y_end = std::numeric_limits<double>::quiet_NaN();
 	ColourMode colour_mode = colourModeMap[DEFAULT_COLOUR_MODE]; 
 	double colour_cycles = 1.0;
+	bool histogram_smoothing = false;
     std::string output_dir = "/fractals";
     double zoom_step = 0.05;
     int pan_step = 10;
@@ -241,7 +242,7 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
                     break;
                 default:
                     LOG_OUT("Invalid Colour Mode! Exiting...")
-                    exit(-1);
+                    exit(ERR_CODE::INVALID_COLOUR_MODE);
             }
         } 
     }
@@ -317,6 +318,7 @@ void saveFractalImageAndConfig(const cv::Mat& fractalImage, const FractalParams&
     p_image.add("y_start", p.y_start);
     p_image.add("colour_mode", findKeyByValue(colourModeMap, p.colour_mode));
 	p_image.add("colour_cycles", p.colour_cycles);
+	p_image.add("histogram_smoothing", p.histogram_smoothing);
     p_image.add("output_dir", p.output_dir);
     p_image.add("zoom_step", p.zoom_step);
     p_image.add("pan_step", p.pan_step);

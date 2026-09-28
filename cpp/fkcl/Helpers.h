@@ -17,6 +17,8 @@ enum ERR_CODE
 {
 	MISSING_CONFIG_FILE = -1,
 	INVALID_CONFIG_VALUE = -2,
+	INVALID_COLOUR_MODE = -3,
+	INVALID_PARAMETER_COMBINATION = -4
 };
 
 typedef boost::property_tree::ptree ConfigParams;

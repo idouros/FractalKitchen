@@ -36,7 +36,7 @@ int main(int argc, char** argv)
     {
         LOG_OUT(std::string("Exception caught: ") + e.what());
         LOG_OUT("Exiting...");
-        return -1;
+		exit(ERR_CODE::INVALID_CONFIG_VALUE);
     }
     FractalParams p;
     p.type = configParams.get("fractal.type", DEFAULT_PARAMS.type);
@@ -54,6 +54,7 @@ int main(int argc, char** argv)
     p.y_end = configParams.get<double>("image.y_end", DEFAULT_PARAMS.y_end);
     p.colour_mode = ReadEnumFromConfigParams(configParams, colourModeMap, "image.colour_mode", DEFAULT_COLOUR_MODE);
 	p.colour_cycles = configParams.get<double>("image.colour_cycles", DEFAULT_PARAMS.colour_cycles);
+	p.histogram_smoothing = configParams.get<bool>("image.histogram_smoothing", DEFAULT_PARAMS.histogram_smoothing);
     p.output_dir = configParams.get("image.output_dir", DEFAULT_PARAMS.output_dir);
     p.zoom_step = configParams.get<double>("image.zoom_step", DEFAULT_PARAMS.zoom_step);
     p.pan_step = configParams.get<int>("image.pan_step", DEFAULT_PARAMS.pan_step);
@@ -84,7 +85,7 @@ int main(int argc, char** argv)
             else
             {
                 std::cout << "Invalid arguments! Exactly one of x_end, y_end must be defined. Exiting..." << std::endl;
-                return -1;
+                exit(ERR_CODE::INVALID_PARAMETER_COMBINATION);
             }
 
             if (p.showDeviceList)
@@ -121,7 +122,7 @@ int main(int argc, char** argv)
 
                 LOG_OUT("Generating fractal image...");
             std::vector<float> hostData = readBackImageData(p.n_cols, p.n_rows, queue, image);
-            fractalImage = generateFractalImage(p.n_rows, p.n_cols, hostData, p.colour_mode, p.colour_cycles);
+            fractalImage = generateFractalImage(p.n_rows, p.n_cols, hostData, p.colour_mode, p.colour_cycles, p.histogram_smoothing);
             LOG_OUT("Image generation complete!");
             cv::namedWindow(IMAGE_WINDOW, cv::WINDOW_AUTOSIZE);
         }
