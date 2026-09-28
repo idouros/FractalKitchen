@@ -1,16 +1,20 @@
 
 #include <corecrt_math_defines.h>
+#include <map>
 
-// TODO: map enums to strings and use in config files
-// also: the colour cycles
-// and map the keystrokes
+#define DEFAULT_COLOUR_MODE "HSV"
 
-enum ColourMode
-{
-    COLOUR_MODE_HSV = 0,
-    COLOUR_MODE_BBCW,
-    COLOUR_MODE_FLAME
-};
+#define CREATE_ENUM(name) name,
+#define CREATE_MAP(S, ...) { #S, ENUM_CLASS_NAME::##S },
+
+#define COLOUR_MODES(colour_mode) \
+	colour_mode(HSV)\
+	colour_mode(BBCW)\
+	colour_mode(FLAME)
+#define ENUM_CLASS_NAME ColourMode 
+enum class ENUM_CLASS_NAME { COLOUR_MODES(CREATE_ENUM) };
+static std::map<std::string, ENUM_CLASS_NAME> colourModeMap = { COLOUR_MODES(CREATE_MAP) };
+#undef ENUM_CLASS_NAME
 
 inline uint8_t clamp255(double x)
 {

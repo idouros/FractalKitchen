@@ -6,7 +6,8 @@
 #define CL_HPP_TARGET_OPENCL_VERSION  300
 
 #include <filesystem>
-#include <conio.h>
+#include <vector>
+#include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -22,8 +23,7 @@ int main(int argc, char** argv)
     if (argc != 2)
     {
         std::cout << " Usage: " << argv[0] << " ConfigFile" << std::endl;
-        // TODO: Error codes
-        return -1;
+        return ERR_CODE::MISSING_CONFIG_FILE;
     }
 
     LOG_OUT("Reading config file...");
@@ -52,6 +52,7 @@ int main(int argc, char** argv)
     p.x_end = configParams.get<double>("image.x_end", DEFAULT_PARAMS.x_end);
     p.y_start = configParams.get<double>("image.y_start", DEFAULT_PARAMS.y_start);
     p.y_end = configParams.get<double>("image.y_end", DEFAULT_PARAMS.y_end);
+    p.colour_mode = ReadEnumFromConfigParams(configParams, colourModeMap, "image.colour_mode", DEFAULT_COLOUR_MODE);
     p.output_dir = configParams.get("image.output_dir", DEFAULT_PARAMS.output_dir);
     p.zoom_step = configParams.get<double>("image.zoom_step", DEFAULT_PARAMS.zoom_step);
     p.pan_step = configParams.get<int>("image.pan_step", DEFAULT_PARAMS.pan_step);
@@ -119,7 +120,7 @@ int main(int argc, char** argv)
 
                 LOG_OUT("Generating fractal image...");
             std::vector<float> hostData = readBackImageData(p.n_cols, p.n_rows, queue, image);
-            fractalImage = generateFractalImage(p.n_rows, p.n_cols, hostData);
+            fractalImage = generateFractalImage(p.n_rows, p.n_cols, hostData, p.colour_mode);
             LOG_OUT("Image generation complete!");
             cv::namedWindow(IMAGE_WINDOW, cv::WINDOW_AUTOSIZE);
         }

@@ -13,6 +13,12 @@
 #include <ctime>  
 #include <boost/algorithm/string.hpp>
 
+enum ERR_CODE
+{
+	MISSING_CONFIG_FILE = -1,
+	INVALID_CONFIG_VALUE = -2,
+};
+
 typedef boost::property_tree::ptree ConfigParams;
 
 #define TIMESTAMP_STR_LENGTH 50 
@@ -50,8 +56,18 @@ std::string getFileParameter(const std::filesystem::path& configFilePath,
 	return fileParameter.string();
 }
 
+template <typename T>
+bool isAlmostEqual(const T& v1, const T& v2, double epsilon = 1e-5)
+{
+	if (fabs(v1 - v2) > epsilon)
+	{
+		return false;
+	}
+	return true;
+}
+
 template<typename T>
-T readEnumFromConfigParams(const ConfigParams& configParams,
+T ReadEnumFromConfigParams(const ConfigParams& configParams,
 	const std::map<std::string, T>& enum_map,
 	const std::string& key,
 	const std::string& defaultValue)
@@ -65,18 +81,8 @@ T readEnumFromConfigParams(const ConfigParams& configParams,
 	else
 	{
 		std::cout << "Invalid value '" + stringFromConfig + "' for key '" + key + "' found in config file. Exiting" << std::endl;
-		exit(-1);
+		exit(ERR_CODE::INVALID_CONFIG_VALUE);
 	}
-}
-
-template <typename T>
-bool isAlmostEqual(const T& v1, const T& v2, double epsilon = 1e-5)
-{
-	if (fabs(v1 - v2) > epsilon)
-	{
-		return false;
-	}
-	return true;
 }
 
 #endif

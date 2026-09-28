@@ -31,6 +31,7 @@ struct FractalParams {
     double x_end = 0.02;
     double y_start = -0.015;
     double y_end = std::numeric_limits<double>::quiet_NaN();
+	ColourMode colour_mode = colourModeMap[DEFAULT_COLOUR_MODE]; 
     std::string output_dir = "/fractals";
     double zoom_step = 0.05;
     int pan_step = 10;
@@ -205,7 +206,7 @@ std::vector<size_t> makeCumulativeHistogram(
 
 // Image Generation
 cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std::vector<float>& hostData, 
-    const ColourMode& colourMode = COLOUR_MODE_BBCW)
+    const ColourMode& colourMode = ColourMode::BBCW)
 {
     const float colourCycles = 2.0f; // TODO: make this user-configurable
     cv::Mat fractalImageBGR((int)n_rows, (int)n_cols, CV_8UC3);
@@ -214,7 +215,7 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
     auto histogram = makeHistogram(hostData);
     auto cumulative = makeCumulativeHistogram(histogram);
 
-    if(colourMode == COLOUR_MODE_HSV)
+    if(colourMode == ColourMode::HSV)
     {
         fractalImageHSV = cv::Mat((int)n_rows, (int)n_cols, CV_8UC3);
     }
@@ -226,15 +227,15 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
             auto val = hostData[i * n_cols + j];
             switch(colourMode)
             {
-                case COLOUR_MODE_HSV:
+                case ColourMode::HSV:
                 {
                     fractalImageHSV.at<cv::Vec3b>(i, j) = smoothHSV(val, colourCycles);
                     break;
                 }
-                case COLOUR_MODE_BBCW:
+                case ColourMode::BBCW:
                     fractalImageBGR.at<cv::Vec3b>(i, j) = smoothBBCW(val, colourCycles, &cumulative);
                     break;
-                case COLOUR_MODE_FLAME:
+                case ColourMode::FLAME:
                     fractalImageBGR.at<cv::Vec3b>(i, j) = smoothFlame(val, colourCycles);
                     break;
                 default:
@@ -244,7 +245,7 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
         } 
     }
 
-    if(colourMode == COLOUR_MODE_HSV)
+    if(colourMode == ColourMode::HSV)
     {
         cv::cvtColor(fractalImageHSV, fractalImageBGR, cv::COLOR_HSV2BGR);
     }
