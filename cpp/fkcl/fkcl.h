@@ -170,7 +170,7 @@ std::vector<float> readBackImageData(const size_t n_cols, const size_t n_rows, c
 
 
 
-std::vector<size_t> makeHistogram(const std::vector<float>& data, const size_t numBins = 1000)
+std::vector<size_t> makeHistogram(const std::vector<float>& data, const size_t numBins = 65536)
 {
     std::vector<size_t> histogram(numBins, 0);
     for (const float val : data)
@@ -231,14 +231,14 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
             {
                 case ColourMode::HSV:
                 {
-                    fractalImageHSV.at<cv::Vec3b>(i, j) = smoothHSV(val, colourCycles);
+                    fractalImageHSV.at<cv::Vec3b>(i, j) = smoothHSV(val, colourCycles, histogram_smoothing ? &cumulative : nullptr);
                     break;
                 }
                 case ColourMode::BBCW:
                     fractalImageBGR.at<cv::Vec3b>(i, j) = smoothBBCW(val, colourCycles, histogram_smoothing ? &cumulative : nullptr);
                     break;
                 case ColourMode::FLAME:
-                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothFlame(val, colourCycles);
+                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothFlame(val, colourCycles, histogram_smoothing ? &cumulative : nullptr);
                     break;
                 default:
                     LOG_OUT("Invalid Colour Mode! Exiting...")

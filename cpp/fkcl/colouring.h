@@ -21,6 +21,42 @@ inline uint8_t clamp255(double x)
     return static_cast<uint8_t>(std::max(0.0, std::min(255.0, x)));
 }
 
+inline double histRemap(const double val, std::vector<size_t>* cumulativeHistogram = nullptr)
+{
+    // Optional histogram/CDF remapping
+    if (cumulativeHistogram != nullptr &&
+        !cumulativeHistogram->empty() &&
+        cumulativeHistogram->back() > 0)
+    {
+        const size_t numBins = cumulativeHistogram->size();
+        const double total = static_cast<double>(cumulativeHistogram->back());
+
+        // Continuous position within the histogram
+        const double binPos = val * (numBins - 1);
+
+        // Adjacent bins
+        const size_t bin0 = static_cast<size_t>(binPos);
+        const size_t bin1 = std::min(bin0 + 1, numBins - 1);
+
+        // Fractional position between the two bins
+        const double t = binPos - static_cast<double>(bin0);
+
+        // CDF values at the two bins
+        const double cdf0 =
+            static_cast<double>((*cumulativeHistogram)[bin0]) / total;
+
+        const double cdf1 =
+            static_cast<double>((*cumulativeHistogram)[bin1]) / total;
+
+        // Linear interpolation between CDF values
+        return cdf0 + t * (cdf1 - cdf0);
+    }
+    else 
+    {
+        return val;
+    }
+}
+
 // Cosine interpolation between two values
 inline double coslerp(double a, double b, double t)
 {
@@ -29,10 +65,10 @@ inline double coslerp(double a, double b, double t)
     return a*(1-f) + b*f;
 }
 
-
-inline cv::Vec3b smoothFlame(const double val0, const double cycles = 1.0)
+inline cv::Vec3b smoothFlame(const double val0, const double cycles = 1.0, std::vector<size_t>* cumulativeHistogram = nullptr)
 {
     auto val = std::clamp(val0, 0.0, 1.0);
+    val = histRemap(val, cumulativeHistogram);   
     val = std::fmod(val * cycles, 1.0);
     cv::Vec3b colour; // B, G, R
     double gamma = 0.5;
@@ -74,22 +110,7 @@ inline cv::Vec3b smoothBBCW(const double val0, const double cycles = 1.0, std::v
     if (val <= 0.0)
         return cv::Vec3b(0, 0, 0);
 
-    // Optional histogram/CDF remapping
-    if (cumulativeHistogram != nullptr &&
-        !cumulativeHistogram->empty() &&
-        cumulativeHistogram->back() > 0)
-    {
-        const size_t numBins = cumulativeHistogram->size();
-
-        size_t bin = static_cast<size_t>(val * numBins);
-        bin = std::min(bin, numBins - 1);
-
-        val =
-            static_cast<double>((*cumulativeHistogram)[bin]) /
-            static_cast<double>(cumulativeHistogram->back());
-    }
-    
- 
+    val = histRemap(val, cumulativeHistogram);    
     val = std::fmod(val * cycles, 1.0);
     cv::Vec3b colour; // B, G, R
 
@@ -120,11 +141,13 @@ inline cv::Vec3b smoothBBCW(const double val0, const double cycles = 1.0, std::v
     return colour;
 }
 
-
-inline cv::Vec3b smoothHSV(const double val, const double cycles = 1.0)
+inline cv::Vec3b smoothHSV(const double val0, const double cycles = 1.0, std::vector<size_t>* cumulativeHistogram = nullptr)
 {
+    auto val = std::clamp(val0, 0.0, 1.0);
+    val = histRemap(val, cumulativeHistogram);    
+
     cv::Vec3b colour; // H, S, V
-    colour[0] = static_cast<int>(std::fmod(val * cycles * 179.0f, 179.0f)); // H
+    colour[0] = static_cast<int>(std::fmod(val * cycles * 179.0f, 179.0f));    // H
     colour[1] = static_cast<int>(200 + 55 * std::sqrt(val)); // 200–255        // S
     colour[2] = static_cast<int>(std::lround(255.0f * std::pow(val, 0.3f)));   // V
     return colour; 
