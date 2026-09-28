@@ -207,7 +207,8 @@ std::vector<size_t> makeCumulativeHistogram(
 
 // Image Generation
 cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std::vector<float>& hostData, 
-    const ColourMode& colourMode = ColourMode::BBCW, const double colourCycles = 2.0)
+    const ColourMode& colourMode = ColourMode::BBCW, const double colourCycles = 2.0, const bool histogram_smoothing = false)
+    // TODO: Make use of histogram smoothing optional and user-configurable
 {
     cv::Mat fractalImageBGR((int)n_rows, (int)n_cols, CV_8UC3);
     cv::Mat fractalImageHSV;
@@ -233,7 +234,7 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
                     break;
                 }
                 case ColourMode::BBCW:
-                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothBBCW(val, colourCycles, &cumulative);
+                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothBBCW(val, colourCycles, histogram_smoothing ? &cumulative : nullptr);
                     break;
                 case ColourMode::FLAME:
                     fractalImageBGR.at<cv::Vec3b>(i, j) = smoothFlame(val, colourCycles);
