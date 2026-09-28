@@ -7,7 +7,7 @@
       "project": "cpp\\CMakeLists.txt",
       "projectTarget": "fkcl.exe (fkcl\\fkcl.exe)",
       "name": "fkcl.exe (fkcl\\fkcl.exe)",
-      "args": [ "${workspaceRoot}\\cpp\\configs\\julia01.config" ]
+      "args": [ "${workspaceRoot}\\cpp\\configs\\mandelbrot01.config" ]
     }
   ]
 }

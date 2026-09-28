@@ -85,4 +85,23 @@ T ReadEnumFromConfigParams(const ConfigParams& configParams,
 	}
 }
 
+template <typename Value>
+std::string findKeyByValue(
+	const std::map<std::string, Value>& map,
+	const Value& value)
+{
+	auto it = std::find_if(
+		map.begin(),
+		map.end(),
+		[&](const auto& pair)
+		{
+			return pair.second == value;
+		});
+
+	if (it != map.end())
+		return it->first;
+
+	return {};
+}
+
 #endif

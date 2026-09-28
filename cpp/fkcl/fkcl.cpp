@@ -53,6 +53,7 @@ int main(int argc, char** argv)
     p.y_start = configParams.get<double>("image.y_start", DEFAULT_PARAMS.y_start);
     p.y_end = configParams.get<double>("image.y_end", DEFAULT_PARAMS.y_end);
     p.colour_mode = ReadEnumFromConfigParams(configParams, colourModeMap, "image.colour_mode", DEFAULT_COLOUR_MODE);
+	p.colour_cycles = configParams.get<double>("image.colour_cycles", DEFAULT_PARAMS.colour_cycles);
     p.output_dir = configParams.get("image.output_dir", DEFAULT_PARAMS.output_dir);
     p.zoom_step = configParams.get<double>("image.zoom_step", DEFAULT_PARAMS.zoom_step);
     p.pan_step = configParams.get<int>("image.pan_step", DEFAULT_PARAMS.pan_step);
@@ -120,7 +121,7 @@ int main(int argc, char** argv)
 
                 LOG_OUT("Generating fractal image...");
             std::vector<float> hostData = readBackImageData(p.n_cols, p.n_rows, queue, image);
-            fractalImage = generateFractalImage(p.n_rows, p.n_cols, hostData, p.colour_mode);
+            fractalImage = generateFractalImage(p.n_rows, p.n_cols, hostData, p.colour_mode, p.colour_cycles);
             LOG_OUT("Image generation complete!");
             cv::namedWindow(IMAGE_WINDOW, cv::WINDOW_AUTOSIZE);
         }
