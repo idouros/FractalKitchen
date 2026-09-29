@@ -157,7 +157,7 @@ void runKernel(
 // Read back image from the device to the host
 std::vector<float> readBackImageData(const size_t n_cols, const size_t n_rows, cl::CommandQueue& queue, const cl::Image2D& image)
 {
-    std::vector<float> hostData(n_cols * n_rows);
+    std::vector<float> hostData(n_cols * n_rows * 2);
     size_t origin[3] = { 0, 0, 0 };
     size_t region[3] = { n_cols, n_rows, 1 };
     size_t r1 = 0;
@@ -173,13 +173,14 @@ std::vector<float> readBackImageData(const size_t n_cols, const size_t n_rows, c
 std::vector<size_t> makeHistogram(const std::vector<float>& data, const size_t numBins = 65536)
 {
     std::vector<size_t> histogram(numBins, 0);
-    for (const float val : data)
+    for (size_t i = 0; i < data.size(); i += 2)
     {
+        const float val = data[i];
         // Ignore Mandelbrot interior
         if (val <= 0.0f)
             continue;
 
-            // Convert [0, 1] to histogram bin [0, numBins - 1]
+        // Convert [0, 1] to histogram bin [0, numBins - 1]
         size_t bin = static_cast<size_t>(val * numBins);
 
         // val == 1.0 would otherwise give bin == numBins
@@ -227,22 +228,25 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
     {
         for (auto i = 0; i < n_rows; i++)
         {
-            auto val = hostData[i * n_cols + j];
+            const size_t idx = 2 * (i * n_cols + j);
+            const float escapeValue = hostData[idx];
+            const float distance = hostData[idx + 1];
+
             switch(colourMode)
             {
                 case ColourMode::HSV:
                 {
-                    fractalImageHSV.at<cv::Vec3b>(i, j) = smoothHSV(val, colourCycles, histogram_smoothing ? &cumulative : nullptr);
+                    fractalImageHSV.at<cv::Vec3b>(i, j) = smoothHSV(escapeValue, colourCycles, histogram_smoothing ? &cumulative : nullptr);
                     break;
                 }
                 case ColourMode::BBCW:
-                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothBBCW(val, colourCycles, histogram_smoothing ? &cumulative : nullptr);
+                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothBBCW(escapeValue, colourCycles, histogram_smoothing ? &cumulative : nullptr);
                     break;
                 case ColourMode::FLAME:
-                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothFlame(val, colourCycles, histogram_smoothing ? &cumulative : nullptr);
+                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothFlame(escapeValue, colourCycles, histogram_smoothing ? &cumulative : nullptr);
                     break;
 				case ColourMode::DISTANCE_CONTOURS:
-					fractalImageBGR.at<cv::Vec3b>(i, j) = distanceContours(val, pixel_step);
+					fractalImageBGR.at<cv::Vec3b>(i, j) = distanceContours(distance, pixel_step);
 					break;
                 default:
                     LOG_OUT("Invalid Colour Mode! Exiting...")

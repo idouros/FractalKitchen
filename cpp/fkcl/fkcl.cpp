@@ -70,7 +70,7 @@ int main(int argc, char** argv)
         if (calcFractal)
         {
             LOG_OUT("Initializing essential parameters...");
-            cl::ImageFormat format(CL_R, CL_FLOAT);
+            cl::ImageFormat format(CL_RG, CL_FLOAT);
 
             if (!std::isnan(p.x_end) && std::isnan(p.y_end))
             {
