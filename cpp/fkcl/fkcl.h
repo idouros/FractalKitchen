@@ -32,6 +32,7 @@ struct FractalParams {
     double y_start = -0.015;
     double y_end = std::numeric_limits<double>::quiet_NaN();
 	ColourMode colour_mode = colourModeMap[DEFAULT_COLOUR_MODE]; 
+	RenderMode render_mode = renderModeMap[DEFAULT_RENDER_MODE];
 	double colour_cycles = 1.0;
 	bool histogram_smoothing = false;
     std::string output_dir = "/fractals";
@@ -206,18 +207,83 @@ std::vector<size_t> makeCumulativeHistogram(
     return cumulative;
 }
 
+inline double distanceModulation(
+    const double distance,
+    const double pixelStep,
+    const double strength = 0.7,
+    const double scale = 0.5)
+{
+    if (distance <= 0.0)
+        return 1.0;
 
+    const double d = distance / pixelStep;
+
+    const double de =
+        1.0 - std::exp(-d * scale);
+
+    return (1.0 - strength) + strength * de;
+}
+
+
+inline cv::Vec3b applyDistanceModulation(
+    const cv::Vec3b& colour,
+    const double distance,
+    const double pixelStep,
+    const double strength = 0.7,
+    const double scale = 0.5)
+{
+    if (distance <= 0.0)
+        return colour;
+
+    // strength = 0 → no modulation
+    // strength = 1 → full DE modulation
+    const double modulation = distanceModulation(distance, pixelStep, strength, scale);
+
+    cv::Vec3b result;
+    result[0] = clamp255(colour[0] * modulation);
+    result[1] = clamp255(colour[1] * modulation);
+    result[2] = clamp255(colour[2] * modulation);
+    return result;
+}
+
+inline cv::Vec3b applyDistanceModulationHSV(
+    const cv::Vec3b& colour,
+    const double distance,
+    const double pixelStep,
+    const double strength = 0.7,
+    const double scale = 0.5)
+{
+    if (distance <= 0.0)
+        return colour;
+
+    const double modulation = distanceModulation(distance, pixelStep, strength, scale);
+
+    cv::Vec3b result = colour;
+    // OpenCV HSV:
+    // [0] = H
+    // [1] = S
+    // [2] = V
+    result[2] = clamp255(colour[2] * modulation);
+    return result;
+}
 
 // Image Generation
 cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std::vector<float>& hostData, 
     const double pixel_step,
-    const ColourMode& colourMode = ColourMode::BBCW, const double colourCycles = 2.0, const bool histogram_smoothing = false)
+	const ColourMode& colourMode = ColourMode::BBCW, const RenderMode& renderMode = RenderMode::ESCAPE_TIME,
+    const double colourCycles = 2.0, const bool histogram_smoothing = false)
 {
     cv::Mat fractalImageBGR((int)n_rows, (int)n_cols, CV_8UC3);
     cv::Mat fractalImageHSV;
 
-    auto histogram = makeHistogram(hostData);
-    auto cumulative = makeCumulativeHistogram(histogram);
+    std::vector<size_t> cumulative;
+    if (histogram_smoothing &&
+        (renderMode == RenderMode::ESCAPE_TIME ||
+            renderMode == RenderMode::COMBINED))
+    {
+        auto histogram = makeHistogram(hostData);
+        cumulative = makeCumulativeHistogram(histogram);
+    }
 
     if(colourMode == ColourMode::HSV)
     {
@@ -232,20 +298,51 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
             const float escapeValue = hostData[idx];
             const float distance = hostData[idx + 1];
 
+            float renderValue = 0.0f;
+			switch (renderMode)
+			{
+			    case RenderMode::ESCAPE_TIME:
+                case RenderMode::COMBINED:
+				    renderValue = escapeValue;
+				    break;
+			    case RenderMode::DISTANCE:
+				    renderValue = distance;
+				    break;
+			    default:
+				    LOG_OUT("Invalid Render Mode! Exiting...")
+					    exit(ERR_CODE::INVALID_RENDER_MODE);
+			}
+
+            cv::Vec3b colour;
             switch(colourMode)
             {
                 case ColourMode::HSV:
                 {
-                    fractalImageHSV.at<cv::Vec3b>(i, j) = smoothHSV(escapeValue, colourCycles, histogram_smoothing ? &cumulative : nullptr);
+                    colour = smoothHSV(renderValue, colourCycles, cumulative.empty() ? nullptr : &cumulative);
+                    if (renderMode == RenderMode::COMBINED)
+                    {
+                        colour = applyDistanceModulationHSV(colour, distance, pixel_step);
+                    }
+                    fractalImageHSV.at<cv::Vec3b>(i, j) = colour;
                     break;
                 }
                 case ColourMode::BBCW:
-                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothBBCW(escapeValue, colourCycles, histogram_smoothing ? &cumulative : nullptr);
+                    colour = smoothBBCW(renderValue, colourCycles, cumulative.empty() ? nullptr : &cumulative);
+                    if (renderMode == RenderMode::COMBINED)
+                    {
+                        colour = applyDistanceModulation(colour, distance, pixel_step);
+                    }
+                    fractalImageBGR.at<cv::Vec3b>(i, j) = colour;
                     break;
                 case ColourMode::FLAME:
-                    fractalImageBGR.at<cv::Vec3b>(i, j) = smoothFlame(escapeValue, colourCycles, histogram_smoothing ? &cumulative : nullptr);
+                    colour = smoothFlame(renderValue, colourCycles, cumulative.empty() ? nullptr : &cumulative);
+                    if (renderMode == RenderMode::COMBINED)
+                    {
+                        colour = applyDistanceModulation(colour, distance, pixel_step);
+                    }
+                    fractalImageBGR.at<cv::Vec3b>(i, j) = colour;
                     break;
-				case ColourMode::DISTANCE_CONTOURS:
+                case ColourMode::DISTANCE_CONTOURS:
 					fractalImageBGR.at<cv::Vec3b>(i, j) = distanceContours(distance, pixel_step);
 					break;
                 default:
@@ -325,6 +422,7 @@ void saveFractalImageAndConfig(const cv::Mat& fractalImage, const FractalParams&
     p_image.add("x_end", p.x_end);
     p_image.add("y_start", p.y_start);
     p_image.add("colour_mode", findKeyByValue(colourModeMap, p.colour_mode));
+    p_image.add("render_mode", findKeyByValue(renderModeMap, p.render_mode));
 	p_image.add("colour_cycles", p.colour_cycles);
 	p_image.add("histogram_smoothing", p.histogram_smoothing);
     p_image.add("output_dir", p.output_dir);

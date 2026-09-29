@@ -83,18 +83,32 @@ __kernel void init_image(write_only image2d_t img,
     double y = y_start + (double)row * pixel_step;
     double x = x_start + (double)col * pixel_step;
 
-    float ret = 0.0;
+    float escape_value = 0.0f;
+    float distance = 0.0f;
+
     unsigned int i = 0;
     bool keep_going = true;
+    const dd_complex two = dd_complex_from_dd(dd_from_double(2.0), dd_from_double(0.0));
 
-    dd_complex c = dd_complex_from_dd(dd_from_double(xtra_1), dd_from_double(xtra_2));
+
     dd_complex z = dd_complex_from_dd(dd_from_double(x), dd_from_double(y));
+    dd_complex c = dd_complex_from_dd(dd_from_double(xtra_1), dd_from_double(xtra_2));
+
+    dd_complex dz = dd_complex_from_dd(dd_from_double(1.0), dd_from_double(0.0));
+
+
 
     double abs_z_val;
+
     while(keep_going)
     {
+        // Derivative recurrence (must go first):
+        dz = dd_cmul(two, dd_cmul(z, dz));
+
+        // Julia recurrence:
         z = dd_cadd(dd_cmul(z, z), c);
-        dd_real abs_z = dd_cabs(z);          
+
+        dd_real abs_z = dd_cabs(z);
         abs_z_val = abs_z.hi + abs_z.lo;
         if( (i >= max_iter) || (abs_z_val > divergence_threshold) )
         {
@@ -102,13 +116,27 @@ __kernel void init_image(write_only image2d_t img,
         }
         else i++;
     }
-    if(abs_z_val > divergence_threshold)
+    if (abs_z_val > divergence_threshold)
     {
-        ret = (float)(max_iter - i) / (float)max_iter;
+        // Smooth escape-time value
+        if (i < max_iter)
+        {
+            double log_zn = log(abs_z_val);
+            double nu = log(log_zn / log(2.0)) / log(2.0);
+            escape_value = (float)((i + 1 - nu) / max_iter);
+        }
+
+        // Distance estimate
+        dd_real abs_dz = dd_cabs(dz);
+        double abs_dz_val = abs_dz.hi + abs_dz.lo;
+        if (abs_dz_val > 0.0)
+        {
+            distance = (float)(abs_z_val * log(abs_z_val) / abs_dz_val);
+        }
     }
 
     // float4 is required for image writes
-    float4 pixel = (float4)(ret, 0.0f, 0.0f, 0.0f);
+    float4 pixel = (float4)(escape_value, distance, 0.0f, 0.0f);
     write_imagef(img, (int2)(col, row), pixel);
 }
 )CLC";

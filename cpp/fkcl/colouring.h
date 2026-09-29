@@ -3,6 +3,7 @@
 #include <map>
 
 #define DEFAULT_COLOUR_MODE "HSV"
+#define DEFAULT_RENDER_MODE "ESCAPE_TIME"
 
 #define CREATE_ENUM(name) name,
 #define CREATE_MAP(S, ...) { #S, ENUM_CLASS_NAME::##S },
@@ -15,6 +16,15 @@
 #define ENUM_CLASS_NAME ColourMode 
 enum class ENUM_CLASS_NAME { COLOUR_MODES(CREATE_ENUM) };
 static std::map<std::string, ENUM_CLASS_NAME> colourModeMap = { COLOUR_MODES(CREATE_MAP) };
+#undef ENUM_CLASS_NAME
+
+#define RENDER_MODES(render_mode) \
+	render_mode(ESCAPE_TIME)\
+	render_mode(DISTANCE)\
+	render_mode(COMBINED)
+#define ENUM_CLASS_NAME RenderMode 
+enum class ENUM_CLASS_NAME { RENDER_MODES(CREATE_ENUM) };
+static std::map<std::string, ENUM_CLASS_NAME> renderModeMap = { RENDER_MODES(CREATE_MAP) };
 #undef ENUM_CLASS_NAME
 
 inline uint8_t clamp255(double x)
