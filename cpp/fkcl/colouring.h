@@ -10,7 +10,8 @@
 #define COLOUR_MODES(colour_mode) \
 	colour_mode(HSV)\
 	colour_mode(BBCW)\
-	colour_mode(FLAME)
+	colour_mode(FLAME)\
+    colour_mode(DISTANCE_CONTOURS)
 #define ENUM_CLASS_NAME ColourMode 
 enum class ENUM_CLASS_NAME { COLOUR_MODES(CREATE_ENUM) };
 static std::map<std::string, ENUM_CLASS_NAME> colourModeMap = { COLOUR_MODES(CREATE_MAP) };
@@ -152,3 +153,25 @@ inline cv::Vec3b smoothHSV(const double val0, const double cycles = 1.0, std::ve
     colour[2] = static_cast<int>(std::lround(255.0f * std::pow(val, 0.3f)));   // V
     return colour; 
 }
+
+inline cv::Vec3b distanceContours(
+    const double distance,
+    const double pixelStep)
+{
+    if (distance <= 0.0)
+        return cv::Vec3b(0, 0, 0);
+
+    const double d = distance / pixelStep;
+
+    // Log distance gives approximately geometrically spaced contours
+    const double x = std::log1p(d);
+
+    // Repeating smooth bands
+    const double v = 0.5 + 0.5 * std::cos(x * 10.0);
+
+    const uint8_t c = static_cast<uint8_t>(
+        std::clamp(v * 255.0, 0.0, 255.0));
+
+    return cv::Vec3b(c, c, c);
+}
+

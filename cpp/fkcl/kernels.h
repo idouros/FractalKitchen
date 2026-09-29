@@ -20,14 +20,22 @@ __kernel void init_image(write_only image2d_t img,
     float ret = 0.0f;
     unsigned int i = 0;
     bool keep_going = true;
+    const dd_complex one = dd_complex_from_dd(dd_from_double(1.0), dd_from_double(0.0));
+    const dd_complex two = dd_complex_from_dd(dd_from_double(2.0), dd_from_double(0.0));
 
     dd_complex z = dd_complex_from_dd(dd_from_double(xtra_1), dd_from_double(xtra_2));
     dd_complex c = dd_complex_from_dd(dd_from_double(x), dd_from_double(y));
 
+    dd_complex dz = dd_complex_from_dd(dd_from_double(0.0), dd_from_double(0.0));
     double abs_z_val;
     while(keep_going)
     {
+        // Derivative recurrence (must go first):
+        dz = dd_cadd(dd_cmul(two, dd_cmul(z, dz)), one);
+
+        // Mandelbrot recurrence:
         z = dd_cadd(dd_cmul(z, z), c);
+
         dd_real abs_z = dd_cabs(z);          
         abs_z_val = abs_z.hi + abs_z.lo;
         if( (i >= max_iter) || (abs_z_val > divergence_threshold) )
@@ -37,13 +45,25 @@ __kernel void init_image(write_only image2d_t img,
         else i++;
     }
     if(abs_z_val > divergence_threshold)
-    {
+    /*{
         ret = i;
         if (i < max_iter) 
         {
             double log_zn = log(abs_z_val);
             double nu = log(log_zn / log(2.0)) / log(2.0);
             ret = (i + 1 - nu) / max_iter;
+        }
+    }*/
+    {
+        dd_real abs_dz = dd_cabs(dz);
+        double abs_dz_val = abs_dz.hi + abs_dz.lo;
+
+        if (abs_dz_val > 0.0)
+        {
+            double distance =
+                abs_z_val * log(abs_z_val) / abs_dz_val;
+
+            ret = (float)distance;
         }
     }
 

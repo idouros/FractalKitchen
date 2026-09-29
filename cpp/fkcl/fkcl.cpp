@@ -120,9 +120,9 @@ int main(int argc, char** argv)
             EXEC_TIMED(runKernel(program, image, queue, p.x_start, p.y_start, pixel_step, p.max_iter,
                 p.divergence_threshold, p.xtra_1, p.xtra_2, p.n_cols, p.n_rows);)
 
-                LOG_OUT("Generating fractal image...");
+            LOG_OUT("Generating fractal image...");
             std::vector<float> hostData = readBackImageData(p.n_cols, p.n_rows, queue, image);
-            fractalImage = generateFractalImage(p.n_rows, p.n_cols, hostData, p.colour_mode, p.colour_cycles, p.histogram_smoothing);
+            fractalImage = generateFractalImage(p.n_rows, p.n_cols, hostData, pixel_step, p.colour_mode, p.colour_cycles, p.histogram_smoothing);
             LOG_OUT("Image generation complete!");
             cv::namedWindow(IMAGE_WINDOW, cv::WINDOW_AUTOSIZE);
         }

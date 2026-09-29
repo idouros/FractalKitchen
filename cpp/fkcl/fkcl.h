@@ -206,10 +206,11 @@ std::vector<size_t> makeCumulativeHistogram(
 }
 
 
+
 // Image Generation
 cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std::vector<float>& hostData, 
+    const double pixel_step,
     const ColourMode& colourMode = ColourMode::BBCW, const double colourCycles = 2.0, const bool histogram_smoothing = false)
-    // TODO: Make use of histogram smoothing optional and user-configurable
 {
     cv::Mat fractalImageBGR((int)n_rows, (int)n_cols, CV_8UC3);
     cv::Mat fractalImageHSV;
@@ -240,6 +241,9 @@ cv::Mat generateFractalImage(const size_t n_rows, const size_t n_cols, const std
                 case ColourMode::FLAME:
                     fractalImageBGR.at<cv::Vec3b>(i, j) = smoothFlame(val, colourCycles, histogram_smoothing ? &cumulative : nullptr);
                     break;
+				case ColourMode::DISTANCE_CONTOURS:
+					fractalImageBGR.at<cv::Vec3b>(i, j) = distanceContours(val, pixel_step);
+					break;
                 default:
                     LOG_OUT("Invalid Colour Mode! Exiting...")
                     exit(ERR_CODE::INVALID_COLOUR_MODE);
